@@ -42,6 +42,25 @@ my $FLOAT_validator        = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ 
 my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
 my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
 
+my $MONTHYEAR_validator    = sub {
+    my $d = shift;
+    # YYYYMM
+    # YYYYMMDD
+    # YYYYMMWW
+    my $ym_valid = defined($d)
+        && $d =~ /^(\d{4})(\d{2})([w\d]\d)?$/
+        && ($2 >= 1) && ($2 <= 12);
+
+    return unless $ym_valid;
+
+    my $r = $3;
+    return 1 unless $r;
+
+    return ($r =~ /^w[1-6]$/)
+        || (($r =~ /^\d{2}$/) && ($r >= 1) && ($r <= 31))
+        ;
+};
+
 my $LOCALMKTDATE_validator = sub {
     my $d = shift;
     # YYYYMMDD
@@ -76,8 +95,8 @@ my %per_type = (
     INT                 => $INT_validator,
     SEQNUM              => $INT_validator,
     LENGTH              => $LENGTH_validator,
-    DATA                => $DATA_validator,
     NUMINGROUP          => $LENGTH_validator,
+    DATA                => $DATA_validator,
     FLOAT               => $FLOAT_validator,
     AMT                 => $FLOAT_validator,
     PERCENTAGE          => $FLOAT_validator,
@@ -87,6 +106,7 @@ my %per_type = (
     CURRENCY            => $CURRENCY_validator,
     UTCTIMESTAMP        => $UTCTIMESTAMP_validator,
     LOCALMKTDATE        => $LOCALMKTDATE_validator,
+    MONTHYEAR           => $MONTHYEAR_validator,
 );
 
 sub new {

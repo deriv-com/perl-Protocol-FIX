@@ -174,4 +174,16 @@ subtest "LOCALMKTDATE" => sub {
     ok !$f->check('19981331');
 };
 
+subtest "LOCALMKTDATE" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'MONTHYEAR');
+    ok $f->check('199812');
+    ok $f->check('19981210');
+    ok $f->check('199812w1');
+    ok $f->check('199812w6');
+
+    ok !$f->check('19981232');
+    ok !$f->check('199812w7');
+};
+
+
 done_testing;
