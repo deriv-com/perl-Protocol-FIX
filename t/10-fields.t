@@ -10,14 +10,14 @@ use Protocol::FIX::Field;
 subtest "STRING" => sub {
     subtest "string filed w/o enumerations" => sub {
         my $f = Protocol::FIX::Field->new(1, 'Account', 'STRING');
-        my $s = $f->serialise('abc');
+        my $s = $f->serialize('abc');
         is $s, '1=abc';
 
         ok $f->check('abc');
         ok !$f->check(undef);
 
         ok !$f->check('='), "delimiter is not allowed";
-        like exception { $f->serialise('=') }, qr/not acceptable/;
+        like exception { $f->serialize('=') }, qr/not acceptable/;
     };
 
     subtest "string filed with enumerations" => sub {
@@ -26,7 +26,7 @@ subtest "STRING" => sub {
             C => 'CANCEL',
             R => 'REPLACE',
         });
-        is $f->serialise('NEW'), '5=N';
+        is $f->serialize('NEW'), '5=N';
 
         ok $f->check('NEW');
         ok $f->check('CANCEL');
@@ -41,7 +41,7 @@ subtest "STRING" => sub {
 subtest "INT" => sub {
     subtest "w/o enumerations" => sub {
         my $f = Protocol::FIX::Field->new(68, 'TotNoOrders', 'INT');
-        is $f->serialise(5), '68=5';
+        is $f->serialize(5), '68=5';
         ok $f->check(5);
         ok $f->check(-5);
 
@@ -56,7 +56,7 @@ subtest "INT" => sub {
             0 => 'ACCEPTED',
             1 => 'BLOCK_LEVEL_REJECT',
         });
-        is $f->serialise('BLOCK_LEVEL_REJECT'), '87=1';
+        is $f->serialize('BLOCK_LEVEL_REJECT'), '87=1';
         ok $f->check('ACCEPTED');
 
         ok !$f->check(0);
@@ -68,7 +68,7 @@ subtest "INT" => sub {
 
 subtest "LENGTH" => sub {
     my $f = Protocol::FIX::Field->new(90, 'SecureDataLen', 'LENGTH');
-    is $f->serialise(3), '90=3';
+    is $f->serialize(3), '90=3';
     ok $f->check(5);
     ok $f->check(55);
 
@@ -81,7 +81,7 @@ subtest "LENGTH" => sub {
 
 subtest "DATA" => sub {
     my $f = Protocol::FIX::Field->new(91, 'SecureData', 'DATA');
-    is $f->serialise('abc==='), '91=abc===';
+    is $f->serialize('abc==='), '91=abc===';
     ok $f->check('a');
     ok $f->check("\x01");
     ok $f->check(0);

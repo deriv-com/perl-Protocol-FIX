@@ -6,6 +6,7 @@ use warnings;
 use XML::Fast;
 use File::ShareDir qw/dist_dir/;
 use Path::Tiny;
+use UNIVERSAL;
 
 use Protocol::FIX::Field;
 
@@ -34,6 +35,17 @@ sub new {
     bless $obj, $class;
     $obj->_construct_from_definition($protocol_definition);
     return $obj;
+};
+
+# checks that object conforms "composite" concept, i.e. field, group, component
+# and message(?)
+sub is_composite {
+    my $obj = shift;
+    return defined($obj)
+        && UNIVERSAL::can($obj, 'serialize')
+        && exists $obj->{name}
+        && exists $obj->{type}
+    ;
 };
 
 sub _construct_from_definition {

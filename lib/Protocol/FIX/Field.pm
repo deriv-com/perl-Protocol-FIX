@@ -77,7 +77,7 @@ sub check {
     return $result;
 }
 
-sub serialise {
+sub serialize {
     my ($self, $value) = @_;
 
     my $packed_value =  $self->{values} ? do {
