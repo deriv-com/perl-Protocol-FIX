@@ -142,5 +142,36 @@ subtest "CURRENCY" => sub {
     is $f->serialize('BYN'), '521=BYN';
 };
 
+subtest "UTCTIMESTAMP" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'UTCTIMESTAMP');
+
+    ok $f->check('19981231-23:59:59');
+    ok $f->check('19981231-23:59:59.123');
+
+    ok !$f->check('19981231-23:59:59.1234');
+    ok !$f->check('1998123-23:59:59.123');
+    ok !$f->check('19981231-25:59:59');
+    ok !$f->check('19981231-24:79:59');
+    ok !$f->check('19981232-22:59:59');
+    ok !$f->check('19981331-21:59:59');
+    ok !$f->check(undef);
+};
+
+subtest "BOOLEAN" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'BOOLEAN');
+    ok $f->check('Y');
+    ok $f->check('N');
+
+    ok !$f->check('y');
+    ok !$f->check('no');
+    ok !$f->check(1);
+};
+
+subtest "LOCALMKTDATE" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'LOCALMKTDATE');
+    ok $f->check('19981231');
+    ok !$f->check('199812311');
+    ok !$f->check('19981331');
+};
 
 done_testing;

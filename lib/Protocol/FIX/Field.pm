@@ -33,15 +33,42 @@ UTCTIMESTAMP
 =cut
 
 # anyting defined and not containing delimiter
-my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /=/ };
-my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
-my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
-my $DATA_validator     = sub { defined($_[0]) && length($_[0]) > 0 };
-my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
-my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
-my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
+my $BOOLEAN_validator      = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
+my $STRING_validator       = sub { defined($_[0]) && $_[0] !~ /=/ };
+my $INT_validator          = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
+my $LENGTH_validator       = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
+my $DATA_validator         = sub { defined($_[0]) && length($_[0]) > 0 };
+my $FLOAT_validator        = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
+my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
+my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
+
+my $LOCALMKTDATE_validator = sub {
+    my $d = shift;
+    # YYYYMMDD
+    return defined($d)
+        && $d =~ /^(\d{4})(\d{2})(\d{2})$/
+        && ($2 >= 1) && ($2 <= 12)
+        && ($3 >= 1) && ($3 <= 31)
+        ;
+};
+my $UTCTIMESTAMP_validator = sub {
+    my $t = shift;
+    # YYYYMMDD-HH:MM:SS
+    # YYYYMMDD-HH:MM:SS.sss
+    if (defined($t) && $t =~ /^(\d{4})(\d{2})(\d{2})-(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
+        return ($2 >= 1) && ($2 <= 12)
+            && ($3 >= 1) && ($3 <= 31)
+            && ($4 >= 0) && ($4 <= 23)
+            && ($5 >= 0) && ($5 <= 59)
+            && ($6 >= 0) && ($5 <= 60)
+
+    } else {
+        return;
+    }
+};
 
 my %per_type = (
+    BOOLEAN             => $BOOLEAN_validator,
     CHAR                => $CHAR_validator,
     STRING              => $STRING_validator,
     MULTIPLEVALUESTRING => $STRING_validator,
@@ -56,7 +83,10 @@ my %per_type = (
     PERCENTAGE          => $FLOAT_validator,
     PRICE               => $FLOAT_validator,
     QTY                 => $FLOAT_validator,
+    PRICEOFFSET         => $FLOAT_validator,
     CURRENCY            => $CURRENCY_validator,
+    UTCTIMESTAMP        => $UTCTIMESTAMP_validator,
+    LOCALMKTDATE        => $LOCALMKTDATE_validator,
 );
 
 sub new {
