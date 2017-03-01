@@ -74,7 +74,7 @@ subtest "mandatory & optional fields :: NoLinesOfText" => sub {
         '33=1 | 58=abc | ';
 
     like exception { $g->serialize([EncodedTextLen => 1, EncodedText => 'Z']) },
-        qr/'Text' is mandatory for 'NoLinesOfText'/;
+        qr/'Text' is mandatory for group 'NoLinesOfText'/;
 };
 
 done_testing;

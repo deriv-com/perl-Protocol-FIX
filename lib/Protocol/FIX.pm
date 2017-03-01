@@ -16,6 +16,8 @@ my %specificaion_for = (
     fix44 => 'FIX44.xml'
 );
 
+our $SEPARATOR = "\x{01}";
+
 sub new {
     my ($class, $version) = @_;
     die("FIX protocol version should be specified")
