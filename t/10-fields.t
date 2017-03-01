@@ -64,8 +64,30 @@ subtest "INT" => sub {
         ok !$f->check("");
         ok !$f->check(undef);
     };
-
 };
 
+subtest "LENGTH" => sub {
+    my $f = Protocol::FIX::Field->new(90, 'SecureDataLen', 'LENGTH');
+    is $f->serialise(3), '90=3';
+    ok $f->check(5);
+    ok $f->check(55);
+
+    ok !$f->check(0);
+    ok !$f->check(-5);
+    ok !$f->check("abc");
+    ok !$f->check("");
+    ok !$f->check(undef);
+};
+
+subtest "DATA" => sub {
+    my $f = Protocol::FIX::Field->new(91, 'SecureData', 'DATA');
+    is $f->serialise('abc==='), '91=abc===';
+    ok $f->check('a');
+    ok $f->check("\x01");
+    ok $f->check(0);
+
+    ok !$f->check("");
+    ok !$f->check(undef);
+};
 
 done_testing;

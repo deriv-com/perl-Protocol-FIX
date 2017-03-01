@@ -32,10 +32,18 @@ UTCTIMESTAMP
 
 =cut
 
+# anyting defined and not containing delimiter
+my $STRING_validator = sub { defined($_[0]) && $_[0] !~ /=/ };
+my $INT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
+my $LENGTH_validator = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
+my $DATA_validator   = sub { defined($_[0]) && length($_[0]) > 0 };
+
 my %per_type = (
-    # anyting defined and not containing delimiter
-    STRING => sub { defined($_[0]) && $_[0] !~ /=/ },
-    INT => sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ },
+    STRING     => $STRING_validator,
+    INT        => $INT_validator,
+    LENGTH     => $LENGTH_validator,
+    DATA       => $DATA_validator,
+    NUMINGROUP => $LENGTH_validator,
 );
 
 sub new {
