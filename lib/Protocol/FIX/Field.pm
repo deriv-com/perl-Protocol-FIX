@@ -42,16 +42,21 @@ my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
 my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
 
 my %per_type = (
-    CHAR       => $CHAR_validator,
-    STRING     => $STRING_validator,
-    INT        => $INT_validator,
-    LENGTH     => $LENGTH_validator,
-    DATA       => $DATA_validator,
-    NUMINGROUP => $LENGTH_validator,
-    FLOAT      => $FLOAT_validator,
-    ATM        => $FLOAT_validator,
-    PERCENTAGE => $FLOAT_validator,
-    CURRENCY   => $CURRENCY_validator,
+    CHAR                => $CHAR_validator,
+    STRING              => $STRING_validator,
+    MULTIPLEVALUESTRING => $STRING_validator,
+    EXCHANGE            => $STRING_validator,
+    INT                 => $INT_validator,
+    SEQNUM              => $INT_validator,
+    LENGTH              => $LENGTH_validator,
+    DATA                => $DATA_validator,
+    NUMINGROUP          => $LENGTH_validator,
+    FLOAT               => $FLOAT_validator,
+    AMT                 => $FLOAT_validator,
+    PERCENTAGE          => $FLOAT_validator,
+    PRICE               => $FLOAT_validator,
+    QTY                 => $FLOAT_validator,
+    CURRENCY            => $CURRENCY_validator,
 );
 
 sub new {

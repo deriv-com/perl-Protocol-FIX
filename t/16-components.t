@@ -11,7 +11,7 @@ use Protocol::FIX::Group;
 use Protocol::FIX::Component;
 
 subtest "simple component 'CommissionData'" => sub {
-    my $f_1 = Protocol::FIX::Field->new(12, 'Commission', 'ATM');
+    my $f_1 = Protocol::FIX::Field->new(12, 'Commission', 'AMT');
     my $f_2 = Protocol::FIX::Field->new(13, 'CommType', 'CHAR', {
         1 => 'PER_UNIT',
         2 => 'PERCENTAGE',
