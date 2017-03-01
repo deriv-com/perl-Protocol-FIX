@@ -2,7 +2,7 @@ package Protocol::FIX::BaseComposite;
 
 use strict;
 use warnings;
-use UNIVERSAL;
+
 use Protocol::FIX;
 
 sub new {
@@ -89,7 +89,7 @@ sub serialize {
         die "'$mandatory_name' is mandatory for " . $self->{type} . " '" . $self->{name} . "'"
             unless exists $used_composites{$mandatory_name};
     }
-    return join $Protocol::FIX::SEPARATOR, @strings, '';
+    return join $Protocol::FIX::SEPARATOR, @strings;
 }
 
 1;

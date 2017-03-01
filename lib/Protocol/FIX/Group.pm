@@ -4,6 +4,8 @@ use strict;
 use warnings;
 
 use Protocol::FIX;
+use UNIVERSAL;
+
 use mro;
 use parent qw/Protocol::FIX::BaseComposite/;
 
@@ -16,7 +18,7 @@ sub new {
     die "type of base field must be strictly 'NUMINGROUP'"
         unless $base_field->{type} eq 'NUMINGROUP';
 
-    my $obj = Protocol::FIX::BaseComposite::new($class, $base_field->{name}, 'group', $composites);
+    my $obj = next::method($class, $base_field->{name}, 'group', $composites);
 
     $obj->{base_field} = $base_field;
 
@@ -24,19 +26,21 @@ sub new {
 }
 
 sub serialize {
-    my ($self, @repetitions) = @_;
+    my ($self, $repetitions) = @_;
 
-    die '@repetitions must be non-empty in $obj->serialize(@repetitions)'
-        if @repetitions == 0;
+    die '$repetitions must be ARRAY in $obj->serialize($repetitions)'
+        unless ref($repetitions) eq 'ARRAY';
 
+    die '@repetitions must be non-empty in $obj->serialize($repetitions)'
+        if @$repetitions == 0;
 
-    my $buff = $self->{base_field}->serialize(scalar @repetitions)
-        . $Protocol::FIX::SEPARATOR;
+    my @strings = ( $self->{base_field}->serialize(scalar @$repetitions) );
 
-    for my $values (@repetitions) {
-        $buff .= $self->next::method($values);
+    for my $values (@$repetitions) {
+        push @strings, $self->next::method($values);
     }
-    return $buff;
+
+    return join $Protocol::FIX::SEPARATOR, @strings;
 }
 
 1;

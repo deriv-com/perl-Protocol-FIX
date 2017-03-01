@@ -9,6 +9,9 @@ use Path::Tiny;
 use UNIVERSAL;
 
 use Protocol::FIX::Field;
+use Exporter qw/import/;
+
+our @EXPORT_OK = qw/humanize/;
 
 my $distribution = 'Protocol-FIX';
 
@@ -38,6 +41,12 @@ sub new {
     $obj->_construct_from_definition($protocol_definition);
     return $obj;
 };
+
+
+sub humanize {
+    my $s = shift;
+    return $s =~ s/\x{01}/ | /gr;
+}
 
 # checks that object conforms "composite" concept, i.e. field, group, component
 # and message(?)

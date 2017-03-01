@@ -50,6 +50,7 @@ my %per_type = (
     NUMINGROUP => $LENGTH_validator,
     FLOAT      => $FLOAT_validator,
     ATM        => $FLOAT_validator,
+    PERCENTAGE => $FLOAT_validator,
     CURRENCY   => $CURRENCY_validator,
 );
 
