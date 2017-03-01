@@ -33,21 +33,32 @@ UTCTIMESTAMP
 =cut
 
 # anyting defined and not containing delimiter
-my $STRING_validator = sub { defined($_[0]) && $_[0] !~ /=/ };
-my $INT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
-my $LENGTH_validator = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
-my $DATA_validator   = sub { defined($_[0]) && length($_[0]) > 0 };
+my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /=/ };
+my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
+my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
+my $DATA_validator     = sub { defined($_[0]) && length($_[0]) > 0 };
+my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
+my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
+my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
 
 my %per_type = (
+    CHAR       => $CHAR_validator,
     STRING     => $STRING_validator,
     INT        => $INT_validator,
     LENGTH     => $LENGTH_validator,
     DATA       => $DATA_validator,
     NUMINGROUP => $LENGTH_validator,
+    FLOAT      => $FLOAT_validator,
+    ATM        => $FLOAT_validator,
+    CURRENCY   => $CURRENCY_validator,
 );
 
 sub new {
     my ($class, $number, $name, $type, $values) = @_;
+
+    die "Unsupported field type '$type'"
+        unless exists $per_type{$type};
+
     my $obj = {
         number => $number,
         name => $name,

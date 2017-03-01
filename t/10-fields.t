@@ -90,4 +90,57 @@ subtest "DATA" => sub {
     ok !$f->check(undef);
 };
 
+subtest "FLOAT" => sub {
+    my $f = Protocol::FIX::Field->new(520, 'ContAmtValue', 'FLOAT');
+
+    ok $f->check(0);
+    ok $f->check(3.14);
+    ok $f->check(-5);
+    ok $f->check("00023.23");
+    ok $f->check("23.0000");
+    ok $f->check("-23.0");
+    ok $f->check("23.0");
+
+    ok !$f->check("22.2.2");
+    ok !$f->check("+1");
+    ok !$f->check("abc");
+    ok !$f->check("");
+    ok !$f->check(undef);
+
+    is $f->serialize('10.00001'), '520=10.00001';
+
+};
+
+subtest "CHAR" => sub {
+    my $f = Protocol::FIX::Field->new(13, 'CommType', 'CHAR');
+
+    ok $f->check(0);
+    ok $f->check(5);
+    ok $f->check('A');
+    ok $f->check('a');
+
+    ok !$f->check("ab");
+    ok !$f->check('=');
+    ok !$f->check("");
+    ok !$f->check(undef);
+
+    is $f->serialize('z'), '13=z';
+};
+
+subtest "CURRENCY" => sub {
+    my $f = Protocol::FIX::Field->new(521, 'ContAmtCurr', 'CURRENCY');
+
+    ok $f->check('USD');
+    ok $f->check('JPY');
+    ok $f->check('BYN');
+    ok $f->check('RUB');
+
+    ok !$f->check("USDJPY");
+    ok !$f->check("");
+    ok !$f->check(undef);
+
+    is $f->serialize('BYN'), '521=BYN';
+};
+
+
 done_testing;
