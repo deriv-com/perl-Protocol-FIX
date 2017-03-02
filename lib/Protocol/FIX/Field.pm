@@ -41,6 +41,7 @@ my $DATA_validator         = sub { defined($_[0]) && length($_[0]) > 0 };
 my $FLOAT_validator        = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
 my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
 my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
+my $COUNTRY_validator      = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/ };
 
 my $MONTHYEAR_validator    = sub {
     my $d = shift;
@@ -70,6 +71,7 @@ my $LOCALMKTDATE_validator = sub {
         && ($3 >= 1) && ($3 <= 31)
         ;
 };
+
 my $UTCTIMESTAMP_validator = sub {
     my $t = shift;
     # YYYYMMDD-HH:MM:SS
@@ -81,6 +83,19 @@ my $UTCTIMESTAMP_validator = sub {
             && ($5 >= 0) && ($5 <= 59)
             && ($6 >= 0) && ($5 <= 60)
 
+    } else {
+        return;
+    }
+};
+
+my $UTCTIMEONLY_validator = sub {
+    # HH:MM:SS
+    # HH:MM:SS.sss
+    my $t = shift;
+    if (defined($t) && $t =~ /^(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
+        return ($1 >= 0) && ($1 <= 23)
+            && ($2 >= 0) && ($2 <= 59)
+            && ($3 >= 0) && ($3 <= 60);
     } else {
         return;
     }
@@ -106,7 +121,10 @@ my %per_type = (
     CURRENCY            => $CURRENCY_validator,
     UTCTIMESTAMP        => $UTCTIMESTAMP_validator,
     LOCALMKTDATE        => $LOCALMKTDATE_validator,
+    UTCDATEONLY         => $LOCALMKTDATE_validator,
     MONTHYEAR           => $MONTHYEAR_validator,
+    UTCTIMEONLY         => $UTCTIMEONLY_validator,
+    COUNTRY             => $COUNTRY_validator,
 );
 
 sub new {

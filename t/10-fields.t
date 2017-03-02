@@ -185,5 +185,29 @@ subtest "LOCALMKTDATE" => sub {
     ok !$f->check('199812w7');
 };
 
+subtest "UTCTIMEONLY" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'UTCTIMEONLY');
+    ok $f->check('11:12:55');
+    ok $f->check('11:12:55.123');
+
+    ok !$f->check('25:12:55.123');
+    ok !$f->check('11:61:55.123');
+    ok !$f->check('11:12:62.123');
+    ok !$f->check('11:12:55.1234');
+    ok !$f->check(undef);
+    ok !$f->check("");
+};
+
+subtest "COUNTRY" => sub {
+    my $f = Protocol::FIX::Field->new(5, 'f', 'COUNTRY');
+    ok $f->check('RU');
+    ok $f->check('BY');
+    ok $f->check('US');
+
+    ok !$f->check(undef);
+    ok !$f->check("");
+    ok !$f->check("abc");
+    ok !$f->check("12");
+};
 
 done_testing;
