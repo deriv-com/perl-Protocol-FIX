@@ -126,6 +126,26 @@ subtest "check group(NoCapacities) & component(CpctyConfGrp) with mandatory comp
     ok $composites->[5], "mandatory";
 };
 
+subtest "check header & trailer" => sub {
+    subtest "trailer" => sub {
+        my $t = $proto->trailer;
+        ok $t;
+        my $composite_for = $t->{composite_by_name};
+        ok $composite_for->{SignatureLength};
+        ok $composite_for->{Signature};
+        ok $composite_for->{CheckSum};
+    };
 
+    subtest "header" => sub {
+        my $h = $proto->header;
+        ok $h;
+        my $composite_for = $h->{composite_by_name};
+        ok $composite_for->{BeginString};
+        ok $composite_for->{SenderLocationID};
+        ok $composite_for->{XmlDataLen};
+        ok $composite_for->{Hop};
+    };
+
+};
 
 done_testing;

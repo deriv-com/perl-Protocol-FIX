@@ -11,6 +11,7 @@ use UNIVERSAL;
 use Protocol::FIX::Component;
 use Protocol::FIX::Field;
 use Protocol::FIX::Group;
+use Protocol::FIX::BaseComposite;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
@@ -87,6 +88,24 @@ sub _construct_fields {
     return $fields_lookup;
 }
 
+sub _get_composites {
+    my ($values, $lookup) = @_;
+    return () unless $values;
+
+    my $array = ref($values) ne 'ARRAY' ? [$values] : $values;
+    my @composites = map {
+        my $ref = $_;
+        my $name = $ref->{-name};
+        my $required = $ref->{-required} eq 'Y';
+        my $composite = $lookup->{by_name}->{$name};
+
+        die($name) unless $composite;
+
+        ($composite, $required);
+    } @$array;
+    return @composites;
+};
+
 sub _construct_components {
     my ($self, $definition, $fields_lookup) = @_;
 
@@ -108,46 +127,27 @@ OUTER:
 
         next if $already_constructed{$name};
 
-        my $inner_components = $component_descr->{component} // [];
-        $inner_components = [$inner_components] if ($inner_components && (ref($inner_components) ne 'ARRAY'));
-        for my $inner_component_ref (@$inner_components) {
-            my $inner_name = $inner_component_ref->{-name};
-            my $required = $inner_component_ref->{-required} eq 'Y';
-            my $inner_component = $components_lookup->{by_name}->{$inner_name};
-            if (!$inner_component) {
-                # not constructed yet, postpone current component construction
-                push @components_queue, $component_descr;
-                next OUTER;
-            } else {
-                push @composites, $inner_component => $required;
-            }
+        eval { push @composites, _get_composites($component_descr->{component}, $components_lookup) };
+        if ($@) {
+            # not constructed yet, postpone current component construction
+            push @components_queue, $component_descr;
+            next OUTER;
         }
 
         my $group_descr = $component_descr->{group};
-        if ($group_descr) {
-            my $group_name = $group_descr->{-name};
-            my $required = $group_descr->{-required} eq 'Y';
-            my $group = $groups_lookup->{by_name}->{$group_name};
-            if (!$group) {
-                $group_descr->{-type} = 'group';
-                unshift @components_queue, $group_descr;
-                # not constructed yet, postpone current component construction
-                push @components_queue, $component_descr;
-                next OUTER;
-            } else {
-                push @composites, $group => $required;
-            }
+        eval { push @composites, _get_composites($group_descr, $groups_lookup) };
+        if ($@) {
+            $group_descr->{-type} = 'group';
+            unshift @components_queue, $group_descr;
+            # not constructed yet, postpone current component construction
+            push @components_queue, $component_descr;
+            next OUTER;
         }
 
-        my $fields_arr = $component_descr->{field} // [];
-        $fields_arr = [$fields_arr] if ($fields_arr && (ref($fields_arr) ne 'ARRAY'));
-        for my $field_ref (@$fields_arr) {
-            my $field_name = $field_ref->{-name};
-            my $field = $fields_lookup->{by_name}->{$field_name}
-                // die("${name} refers field '${field_name}', which is not available");
-            my $required = $field_ref->{-required} eq 'Y';
-            push @composites, $field => $required;
-        }
+        eval { push @composites, _get_composites($component_descr->{field}, $fields_lookup) };
+        # make it human friendly
+        die("Cannot find fild '$@' referred by '$name'")
+            if ($@);
 
         if ($type eq 'component') {
             my $component = Protocol::FIX::Component->new($name, \@composites);
@@ -166,6 +166,20 @@ OUTER:
     return ($components_lookup, $groups_lookup);
 }
 
+sub _construct_composite {
+    my ($self, $name, $descr, $fields_lookup, $components_lookup, $groups_lookup) = @_;
+
+    my @composites;
+    eval {
+        push @composites, _get_composites($descr->{field}, $fields_lookup);
+        push @composites, _get_composites($descr->{component}, $components_lookup);
+    };
+    if ($@) {
+        die("Cannot find composite '$@', referred in '$name'")
+    }
+
+    return Protocol::FIX::BaseComposite->new($name, $name, \@composites);
+}
 
 sub _construct_from_definition {
     my ($self, $definition) = @_;
@@ -173,6 +187,13 @@ sub _construct_from_definition {
     my $fields_lookup = $self->_construct_fields($definition);
     my ($components_lookup, $groups_lookup) = $self->_construct_components($definition, $fields_lookup);
 
+    my $header_descr = $definition->{fix}->{header};
+    my $trailer_descr = $definition->{fix}->{trailer};
+    my $header = $self->_construct_composite('header', $header_descr, $fields_lookup, $components_lookup, $groups_lookup);
+    my $trailer = $self->_construct_composite('trailer', $trailer_descr, $fields_lookup, $components_lookup, $groups_lookup);
+
+    $self->{header} = $header;
+    $self->{trailer} = $trailer;
     $self->{fields_lookup} = $fields_lookup;
     $self->{components_lookup} = $components_lookup;
     $self->{groups_lookup} = $groups_lookup;
@@ -213,5 +234,13 @@ sub group_by_name {
     }
     return $group;
 };
+
+sub header {
+    return shift->{header};
+}
+
+sub trailer {
+    return shift->{trailer};
+}
 
 1;
