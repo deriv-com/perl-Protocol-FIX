@@ -8,7 +8,9 @@ use File::ShareDir qw/dist_dir/;
 use Path::Tiny;
 use UNIVERSAL;
 
+use Protocol::FIX::Component;
 use Protocol::FIX::Field;
+use Protocol::FIX::Group;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
@@ -59,7 +61,7 @@ sub is_composite {
     ;
 };
 
-sub _construct_from_definition {
+sub _construct_fields {
     my ($self, $definition) = @_;
 
     my $fields_lookup = {
@@ -82,7 +84,98 @@ sub _construct_from_definition {
         $fields_lookup->{by_name}->{$name} = $field;
     }
 
+    return $fields_lookup;
+}
+
+sub _construct_components {
+    my ($self, $definition, $fields_lookup) = @_;
+
+    my $components_lookup = {
+        by_name => {},
+    };
+
+    my $groups_lookup = {
+        by_name => {},
+    };
+
+    my %already_constructed;
+    my @components_queue = map { $_->{-type} = 'component'; $_; } @{ $definition->{fix}->{components}->{component} };
+OUTER:
+    while (my $component_descr = shift @components_queue) {
+        my @composites;
+        my $name = $component_descr->{-name};
+        my $type = $component_descr->{-type};
+
+        next if $already_constructed{$name};
+
+        my $inner_components = $component_descr->{component} // [];
+        $inner_components = [$inner_components] if ($inner_components && (ref($inner_components) ne 'ARRAY'));
+        for my $inner_component_ref (@$inner_components) {
+            my $inner_name = $inner_component_ref->{-name};
+            my $required = $inner_component_ref->{-required} eq 'Y';
+            my $inner_component = $components_lookup->{by_name}->{$inner_name};
+            if (!$inner_component) {
+                # not constructed yet, postpone current component construction
+                push @components_queue, $component_descr;
+                next OUTER;
+            } else {
+                push @composites, $inner_component => $required;
+            }
+        }
+
+        my $group_descr = $component_descr->{group};
+        if ($group_descr) {
+            my $group_name = $group_descr->{-name};
+            my $required = $group_descr->{-required} eq 'Y';
+            my $group = $groups_lookup->{by_name}->{$group_name};
+            if (!$group) {
+                $group_descr->{-type} = 'group';
+                unshift @components_queue, $group_descr;
+                # not constructed yet, postpone current component construction
+                push @components_queue, $component_descr;
+                next OUTER;
+            } else {
+                push @composites, $group => $required;
+            }
+        }
+
+        my $fields_arr = $component_descr->{field} // [];
+        $fields_arr = [$fields_arr] if ($fields_arr && (ref($fields_arr) ne 'ARRAY'));
+        for my $field_ref (@$fields_arr) {
+            my $field_name = $field_ref->{-name};
+            my $field = $fields_lookup->{by_name}->{$field_name}
+                // die("${name} refers field '${field_name}', which is not available");
+            my $required = $field_ref->{-required} eq 'Y';
+            push @composites, $field => $required;
+        }
+
+        if ($type eq 'component') {
+            my $component = Protocol::FIX::Component->new($name, \@composites);
+            $components_lookup->{by_name}->{$name} = $component;
+        } else {
+            my $base_field = $fields_lookup->{by_name}->{$name}
+                // die("${name} refers field '${name}', which is not available");
+            my $group = Protocol::FIX::Group->new($base_field, \@composites);
+            die "Group '${name}' has been already constructed"
+                if exists $groups_lookup->{by_name}->{$name};
+            $groups_lookup->{by_name}->{$name} = $group;
+        }
+        $already_constructed{$name} = 1;
+    }
+
+    return ($components_lookup, $groups_lookup);
+}
+
+
+sub _construct_from_definition {
+    my ($self, $definition) = @_;
+
+    my $fields_lookup = $self->_construct_fields($definition);
+    my ($components_lookup, $groups_lookup) = $self->_construct_components($definition, $fields_lookup);
+
     $self->{fields_lookup} = $fields_lookup;
+    $self->{components_lookup} = $components_lookup;
+    $self->{groups_lookup} = $groups_lookup;
 };
 
 sub field_by_name {
@@ -98,11 +191,27 @@ sub field_by_number {
     my ($self, $field_number) = @_;
     my $field = $self->{fields_lookup}->{by_number}->{$field_number};
     if (!$field) {
-       die("Field $field_number is not available in protocol" . $self->{version});
+       die("Field $field_number is not available in protocol " . $self->{version});
     }
     return $field;
 };
 
+sub component_by_name {
+    my ($self, $name) = @_;
+    my $component = $self->{components_lookup}->{by_name}->{$name};
+    if (!$component) {
+       die("Component '$name' is not available in protocol " . $self->{version});
+    }
+    return $component;
+}
 
+sub group_by_name {
+    my ($self, $name) = @_;
+    my $group = $self->{groups_lookup}->{by_name}->{$name};
+    if (!$group) {
+       die("Group '$name' is not available in protocol " . $self->{version});
+    }
+    return $group;
+};
 
 1;
