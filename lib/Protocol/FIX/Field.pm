@@ -143,7 +143,7 @@ sub new {
         my $reverse_values = {};
         @{$reverse_values}{values %$values} = keys %$values;
         $obj->{values} = {
-            by_number => $values,
+            by_id   => $values,
             by_name => $reverse_values,
         };
     }
@@ -166,10 +166,10 @@ sub serialize {
     my ($self, $value) = @_;
 
     my $packed_value =  $self->{values} ? do {
-        my $number = $self->{values}->{by_name}->{$value};
+        my $id = $self->{values}->{by_name}->{$value};
         die("The value '$value' is not acceptable for field " . $self->{name})
-            unless $number;
-        $number;
+            unless defined $id;
+        $id;
     } : $value;
     die("The value '$value' is not acceptable for field " . $self->{name})
         unless $self->check($value);

@@ -56,6 +56,7 @@ subtest "INT" => sub {
             0 => 'ACCEPTED',
             1 => 'BLOCK_LEVEL_REJECT',
         });
+        is $f->serialize('ACCEPTED'), '87=0';
         is $f->serialize('BLOCK_LEVEL_REJECT'), '87=1';
         ok $f->check('ACCEPTED');
 

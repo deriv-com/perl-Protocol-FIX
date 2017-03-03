@@ -182,6 +182,9 @@ sub _construct_composite {
 sub _construct_from_definition {
     my ($self, $definition) = @_;
 
+    my ($type, $major, $minor) = map { $definition->{fix}->{$_} } qw/-type -major -minor/;
+    my $protocol_id = join('.', $type, $major, $minor);
+
     my $fields_lookup = $self->_construct_fields($definition);
     my $components_lookup = $self->_construct_components($definition, $fields_lookup);
 
@@ -190,6 +193,7 @@ sub _construct_from_definition {
     my $header = $self->_construct_composite('header', $header_descr, $fields_lookup, $components_lookup);
     my $trailer = $self->_construct_composite('trailer', $trailer_descr, $fields_lookup, $components_lookup);
 
+    $self->{id} = $protocol_id;
     $self->{header} = $header;
     $self->{trailer} = $trailer;
     $self->{fields_lookup} = $fields_lookup;
@@ -230,5 +234,10 @@ sub header {
 sub trailer {
     return shift->{trailer};
 }
+
+sub id {
+    return shift->{id};
+}
+
 
 1;

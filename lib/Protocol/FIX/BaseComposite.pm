@@ -14,6 +14,9 @@ sub new {
     die "composites array must be non-empty"
         unless @$composites;
 
+    die "composite name must be defined"
+        if (!defined($name) || $name !~ /.+/);
+
     my @composites;
     my @mandatory_composites;
     my %composite_by_name;

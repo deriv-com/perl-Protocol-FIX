@@ -9,6 +9,8 @@ use Protocol::FIX;
 my $proto = Protocol::FIX->new('FIX44');
 ok $proto;
 
+is $proto->id, 'FIX.4.4';
+
 subtest "check simple field" => sub {
     my $f_account = $proto->field_by_name('Account');
     ok $f_account;
