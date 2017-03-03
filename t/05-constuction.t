@@ -25,22 +25,6 @@ subtest "check field with enum(AdvSide)" => sub {
     is $f, $f_2;
 };
 
-subtest "check simple group (NoLegStipulations)" => sub {
-    my $g = $proto->group_by_name('NoLegStipulations');
-    ok $g;
-
-    # check internals
-    my $composites = $g->{composites};
-    ok $composites;
-    ok scalar(@$composites);
-
-    is $composites->[0]->{name}, "LegStipulationType";
-    ok !$composites->[1], "not required";
-
-    is $composites->[2]->{name}, "LegStipulationValue";
-    ok !$composites->[3], "not required";
-};
-
 subtest "check simple component (CommissionData)" => sub {
     my $c = $proto->component_by_name('CommissionData');
     ok $c;
@@ -82,8 +66,13 @@ subtest "check component, consisted from single group(Stipulations)" => sub {
     ok !$composites->[3], "not required";
 };
 
+
 subtest "check group with sub-component(NoNestedPartyIDs) and it's container(NestedParties)" => sub {
-    my $g = $proto->group_by_name('NoNestedPartyIDs');
+    my $c = $proto->component_by_name('NestedParties');
+    ok $c;
+    ok $c->{composite_by_name}->{'NoNestedPartyIDs'}->[0];
+
+    my $g = $c->{composite_by_name}->{'NoNestedPartyIDs'}->[0];
     ok $g;
 
     my $composite_for = $g->{composite_by_name};
@@ -99,12 +88,7 @@ subtest "check group with sub-component(NoNestedPartyIDs) and it's container(Nes
     ok $g_2->{composite_by_name}->{NestedPartySubID};
     ok $g_2->{composite_by_name}->{NestedPartySubIDType};
 
-    my $c = $proto->component_by_name('NestedParties');
-    ok $c;
-    ok $c->{composite_by_name}->{'NoNestedPartyIDs'}->[0];
-    is $c->{composite_by_name}->{'NoNestedPartyIDs'}->[0], $g, "it is the same object";
 };
-
 
 subtest "check group(NoCapacities) & component(CpctyConfGrp) with mandatory composites" => sub {
     my $c = $proto->component_by_name('CpctyConfGrp');
@@ -144,6 +128,37 @@ subtest "check header & trailer" => sub {
         ok $composite_for->{SenderLocationID};
         ok $composite_for->{XmlDataLen};
         ok $composite_for->{Hop};
+    };
+
+};
+
+subtest "check that groups with the same name(NoQuoteEntries) aren't equal" => sub {
+    my $c1 = $proto->component_by_name('QuotCxlEntriesGrp');
+    ok $c1;
+    my $c2 = $proto->component_by_name('QuotEntryAckGrp');
+    ok $c2;
+
+    my $g1 = $c1->{composite_by_name}->{'NoQuoteEntries'}->[0];
+    ok $g1;
+    my $g2 = $c2->{composite_by_name}->{'NoQuoteEntries'}->[0];
+    ok $g2;
+
+    isnt $g1, $g2, "they are different objects (by memory layout)";
+
+    subtest "QuotCxlEntriesGrp::NoQuoteEntries" => sub {
+        ok $g1->{composite_by_name}->{Instrument};
+        ok $g1->{composite_by_name}->{FinancingDetails};
+        ok $g1->{composite_by_name}->{UndInstrmtGrp};
+        ok $g1->{composite_by_name}->{InstrmtLegGrp};
+        ok !$g1->{composite_by_name}->{QuoteEntryID};
+    };
+
+    subtest "QuotEntryAckGrp::NoQuoteEntries" => sub {
+        ok $g2->{composite_by_name}->{QuoteEntryID};
+        ok $g2->{composite_by_name}->{Instrument};
+        ok $g2->{composite_by_name}->{InstrmtLegGrp};
+        ok $g2->{composite_by_name}->{BidPx};
+        ok !$g2->{composite_by_name}->{UndInstrmtGrp};
     };
 
 };

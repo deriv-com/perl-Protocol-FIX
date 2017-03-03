@@ -113,11 +113,6 @@ sub _construct_components {
         by_name => {},
     };
 
-    my $groups_lookup = {
-        by_name => {},
-    };
-
-    my %already_constructed;
     my @components_queue = map { $_->{-type} = 'component'; $_; } @{ $definition->{fix}->{components}->{component} };
 OUTER:
     while (my $component_descr = shift @components_queue) {
@@ -125,20 +120,33 @@ OUTER:
         my $name = $component_descr->{-name};
         my $type = $component_descr->{-type};
 
-        next if $already_constructed{$name};
+        my $fatal = 0;
+        eval {
+            push @composites, _get_composites($component_descr->{component}, $components_lookup);
 
-        eval { push @composites, _get_composites($component_descr->{component}, $components_lookup) };
-        if ($@) {
-            # not constructed yet, postpone current component construction
-            push @components_queue, $component_descr;
-            next OUTER;
-        }
+            my $group_descr = $component_descr->{group};
+            if ($group_descr) {
+                my @group_composites;
 
-        my $group_descr = $component_descr->{group};
-        eval { push @composites, _get_composites($group_descr, $groups_lookup) };
+                # we might fail to construct group as dependent components might not be
+                # constructed yet
+                push @group_composites, _get_composites($group_descr->{component}, $components_lookup);
+
+                # now we should be able to construct group
+                $fatal = 1;
+                push @group_composites, _get_composites($group_descr->{field}, $fields_lookup);
+
+                my $group_name = $group_descr->{-name};
+                my $base_field = $fields_lookup->{by_name}->{$group_name}
+                    // die("${$group_name} refers field '${$group_name}', which is not available");
+                my $group = Protocol::FIX::Group->new($base_field, \@group_composites);
+
+                my $group_required = $group_descr->{-required} eq 'Y';
+                push @composites, $group => $group_required;
+            }
+        };
         if ($@) {
-            $group_descr->{-type} = 'group';
-            unshift @components_queue, $group_descr;
+            die("$@") if ($fatal);
             # not constructed yet, postpone current component construction
             push @components_queue, $component_descr;
             next OUTER;
@@ -149,25 +157,15 @@ OUTER:
         die("Cannot find fild '$@' referred by '$name'")
             if ($@);
 
-        if ($type eq 'component') {
-            my $component = Protocol::FIX::Component->new($name, \@composites);
-            $components_lookup->{by_name}->{$name} = $component;
-        } else {
-            my $base_field = $fields_lookup->{by_name}->{$name}
-                // die("${name} refers field '${name}', which is not available");
-            my $group = Protocol::FIX::Group->new($base_field, \@composites);
-            die "Group '${name}' has been already constructed"
-                if exists $groups_lookup->{by_name}->{$name};
-            $groups_lookup->{by_name}->{$name} = $group;
-        }
-        $already_constructed{$name} = 1;
+        my $component = Protocol::FIX::Component->new($name, \@composites);
+        $components_lookup->{by_name}->{$name} = $component;
     }
 
-    return ($components_lookup, $groups_lookup);
+    return $components_lookup;
 }
 
 sub _construct_composite {
-    my ($self, $name, $descr, $fields_lookup, $components_lookup, $groups_lookup) = @_;
+    my ($self, $name, $descr, $fields_lookup, $components_lookup) = @_;
 
     my @composites;
     eval {
@@ -185,18 +183,17 @@ sub _construct_from_definition {
     my ($self, $definition) = @_;
 
     my $fields_lookup = $self->_construct_fields($definition);
-    my ($components_lookup, $groups_lookup) = $self->_construct_components($definition, $fields_lookup);
+    my $components_lookup = $self->_construct_components($definition, $fields_lookup);
 
     my $header_descr = $definition->{fix}->{header};
     my $trailer_descr = $definition->{fix}->{trailer};
-    my $header = $self->_construct_composite('header', $header_descr, $fields_lookup, $components_lookup, $groups_lookup);
-    my $trailer = $self->_construct_composite('trailer', $trailer_descr, $fields_lookup, $components_lookup, $groups_lookup);
+    my $header = $self->_construct_composite('header', $header_descr, $fields_lookup, $components_lookup);
+    my $trailer = $self->_construct_composite('trailer', $trailer_descr, $fields_lookup, $components_lookup);
 
     $self->{header} = $header;
     $self->{trailer} = $trailer;
     $self->{fields_lookup} = $fields_lookup;
     $self->{components_lookup} = $components_lookup;
-    $self->{groups_lookup} = $groups_lookup;
 };
 
 sub field_by_name {
@@ -225,15 +222,6 @@ sub component_by_name {
     }
     return $component;
 }
-
-sub group_by_name {
-    my ($self, $name) = @_;
-    my $group = $self->{groups_lookup}->{by_name}->{$name};
-    if (!$group) {
-       die("Group '$name' is not available in protocol " . $self->{version});
-    }
-    return $group;
-};
 
 sub header {
     return shift->{header};
