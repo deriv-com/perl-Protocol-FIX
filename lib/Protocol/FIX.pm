@@ -139,7 +139,7 @@ OUTER:
 
                 my $group_name = $group_descr->{-name};
                 my $base_field = $fields_lookup->{by_name}->{$group_name}
-                    // die("${$group_name} refers field '${$group_name}', which is not available");
+                    // die("${group_name} refers field '${group_name}', which is not available");
                 my $group = Protocol::FIX::Group->new($base_field, \@group_composites);
 
                 my $group_required = $group_descr->{-required} eq 'Y';
@@ -201,6 +201,24 @@ sub _construct_messages {
         # make it human friendly
         die("Cannot find fild '$@' referred by '$name'")
             if ($@);
+
+        my $group_descr = $message_descr->{group};
+        # no need to protect with eval, as all fields/components should be availble.
+        # if something is missing this is fatal
+        if ($group_descr) {
+            my @group_composites;
+
+            push @group_composites, _get_composites($group_descr->{component}, $components_lookup);
+            push @group_composites, _get_composites($group_descr->{field}, $fields_lookup);
+
+            my $group_name = $group_descr->{-name};
+            my $base_field = $fields_lookup->{by_name}->{$group_name}
+                // die("${group_name} refers field '${group_name}', which is not available");
+            my $group = Protocol::FIX::Group->new($base_field, \@group_composites);
+
+            my $group_required = $group_descr->{-required} eq 'Y';
+            push @composites, $group => $group_required;
+        }
 
         my $message = Protocol::FIX::Message->new($name, $category, $message_type, \@composites, $self);
         $messages_lookup->{by_name}->{$name} = $message;

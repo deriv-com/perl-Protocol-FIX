@@ -164,33 +164,47 @@ subtest "check that groups with the same name(NoQuoteEntries) aren't equal" => s
     };
 };
 
-subtest "message with single field(Heartbeat)" => sub {
-    my $m = $proto->message_by_name('Heartbeat');
-    ok $m;
+sub check_header_tail {
+    my $m = shift;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
     ok !$m->{composite_by_name}->{BeginString}, "no managed field from header";
     ok $m->{composite_by_name}->{LastMsgSeqNumProcessed}, "field from header";
     ok $m->{composite_by_name}->{Hop}, "component from header";
     ok $m->{composite_by_name}->{Signature}, "field from trailer";
     ok !$m->{composite_by_name}->{CheckSum}, "not managed field from trailer";
+};
 
+subtest "message with single field(Heartbeat)" => sub {
+    my $m = $proto->message_by_name('Heartbeat');
+    ok $m;
+    check_header_tail($m);
     ok $m->{composite_by_name}->{TestReqID}, "own field is presented";
+    is $m->{category}, 'admin';
 };
 
 subtest "message with many fields & components (News)" => sub {
     my $m = $proto->message_by_name('News');
     ok $m;
-    subtest "header/tail" => sub {
-        ok !$m->{composite_by_name}->{BeginString}, "no managed field from header";
-        ok $m->{composite_by_name}->{LastMsgSeqNumProcessed}, "field from header";
-        ok $m->{composite_by_name}->{Hop}, "component from header";
-        ok $m->{composite_by_name}->{Signature}, "field from trailer";
-        ok !$m->{composite_by_name}->{CheckSum}, "not managed field from trailer";
-    };
+    check_header_tail($m);
 
     ok $m->{composite_by_name}->{OrigTime}, "own field is presented";
     ok $m->{composite_by_name}->{Urgency}, "own field is presented";
     ok $m->{composite_by_name}->{RoutingGrp}, "own component is presented";
     ok $m->{composite_by_name}->{InstrmtGrp}, "own component is presented";
+    is $m->{category}, 'app';
+};
+
+subtest "message with group (Logon)" => sub {
+    my $m = $proto->message_by_name('Logon');
+    ok $m;
+    check_header_tail($m);
+    is $m->{category}, 'admin';
+
+    ok $m->{composite_by_name}->{EncryptMethod}, "own field is presented";
+    my $g = $m->{composite_by_name}->{NoMsgTypes}->[0];
+    ok $g, "group NoMsgTypes is presented";
+    $g->{composite_by_name}->{RefMsgType}, "needed field is available in group";
 };
 
 
