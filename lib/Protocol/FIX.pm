@@ -12,6 +12,7 @@ use Protocol::FIX::Component;
 use Protocol::FIX::Field;
 use Protocol::FIX::Group;
 use Protocol::FIX::BaseComposite;
+use Protocol::FIX::Message;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
@@ -179,6 +180,35 @@ sub _construct_composite {
     return Protocol::FIX::BaseComposite->new($name, $name, \@composites);
 }
 
+sub _construct_messages {
+    my ($self, $definition) = @_;
+
+    my $messages_lookup = {
+        by_name => {},
+    };
+    my $fields_lookup = $self->{fields_lookup};
+    my $components_lookup = $self->{components_lookup};
+
+    my @messages_queue = @{ $definition->{fix}->{messages}->{message} };
+    while (my $message_descr = shift @messages_queue) {
+        my @composites;
+        my ($name, $category, $message_type) = map { $message_descr->{$_} } qw/-name -msgcat -msgtype/;
+
+        eval {
+            push @composites, _get_composites($message_descr->{field}, $fields_lookup);
+            push @composites, _get_composites($message_descr->{component}, $components_lookup);
+        };
+        # make it human friendly
+        die("Cannot find fild '$@' referred by '$name'")
+            if ($@);
+
+        my $message = Protocol::FIX::Message->new($name, $category, $message_type, \@composites, $self);
+        $messages_lookup->{by_name}->{$name} = $message;
+    }
+
+    return $messages_lookup;
+}
+
 sub _construct_from_definition {
     my ($self, $definition) = @_;
 
@@ -198,6 +228,10 @@ sub _construct_from_definition {
     $self->{trailer} = $trailer;
     $self->{fields_lookup} = $fields_lookup;
     $self->{components_lookup} = $components_lookup;
+
+    my $messages_lookup = $self->_construct_messages($definition);
+    $self->{messages_lookup} = $messages_lookup;
+
 };
 
 sub field_by_name {
@@ -226,6 +260,16 @@ sub component_by_name {
     }
     return $component;
 }
+
+sub message_by_name {
+    my ($self, $name) = @_;
+    my $message = $self->{messages_lookup}->{by_name}->{$name};
+    if (!$message) {
+       die("Message '$name' is not available in protocol " . $self->{version});
+    }
+    return $message;
+}
+
 
 sub header {
     return shift->{header};

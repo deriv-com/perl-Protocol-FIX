@@ -162,7 +162,36 @@ subtest "check that groups with the same name(NoQuoteEntries) aren't equal" => s
         ok $g2->{composite_by_name}->{BidPx};
         ok !$g2->{composite_by_name}->{UndInstrmtGrp};
     };
-
 };
+
+subtest "message with single field(Heartbeat)" => sub {
+    my $m = $proto->message_by_name('Heartbeat');
+    ok $m;
+    ok !$m->{composite_by_name}->{BeginString}, "no managed field from header";
+    ok $m->{composite_by_name}->{LastMsgSeqNumProcessed}, "field from header";
+    ok $m->{composite_by_name}->{Hop}, "component from header";
+    ok $m->{composite_by_name}->{Signature}, "field from trailer";
+    ok !$m->{composite_by_name}->{CheckSum}, "not managed field from trailer";
+
+    ok $m->{composite_by_name}->{TestReqID}, "own field is presented";
+};
+
+subtest "message with many fields & components (News)" => sub {
+    my $m = $proto->message_by_name('News');
+    ok $m;
+    subtest "header/tail" => sub {
+        ok !$m->{composite_by_name}->{BeginString}, "no managed field from header";
+        ok $m->{composite_by_name}->{LastMsgSeqNumProcessed}, "field from header";
+        ok $m->{composite_by_name}->{Hop}, "component from header";
+        ok $m->{composite_by_name}->{Signature}, "field from trailer";
+        ok !$m->{composite_by_name}->{CheckSum}, "not managed field from trailer";
+    };
+
+    ok $m->{composite_by_name}->{OrigTime}, "own field is presented";
+    ok $m->{composite_by_name}->{Urgency}, "own field is presented";
+    ok $m->{composite_by_name}->{RoutingGrp}, "own component is presented";
+    ok $m->{composite_by_name}->{InstrmtGrp}, "own component is presented";
+};
+
 
 done_testing;
