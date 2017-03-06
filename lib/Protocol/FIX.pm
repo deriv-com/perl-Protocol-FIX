@@ -301,5 +301,11 @@ sub id {
     return shift->{id};
 }
 
+sub serialize_message {
+    my ($self, $message_name, $payload) = @_;
+    my $message = $self->message_by_name($message_name);
+    return $message->serialize($payload);
+}
+
 
 1;

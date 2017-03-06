@@ -66,8 +66,9 @@ sub serialize {
         my $name = $values->[$idx];
         my $value = $values->[$idx + 1];
         my $c_info = $self->{composite_by_name}->{$name};
-        die "Composite '$name' is not available"
-            unless $c_info;
+        if (!$c_info) {
+            die "Composite '$name' is not available for " . $self->{type} . " '" . $self->{name} . "'";
+        }
 
         my $c = $c_info->[0];
         if ($c->{type} eq 'DATA') {
