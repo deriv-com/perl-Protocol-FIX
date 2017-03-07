@@ -14,17 +14,18 @@ sub dehumanize {
     return $buff =~ s/ \| /\x{01}/gr;
 };
 
+=x
 subtest "header & trail errors" => sub {
     my ($m, $err);
 
     subtest "not enough data" => sub {
         ($m, $err) = $proto->parse_message(\"");
         ok !$m;
-        ok !$err;
+        is $err, undef;
 
         ($m, $err) = $proto->parse_message(\"8=FIX.4.4");
         ok !$m;
-        ok !$err;
+        is $err, undef;
     };
 
     subtest "protocol mismatch" => sub {
@@ -71,14 +72,14 @@ subtest "header & trail errors" => sub {
         my $buff = dehumanize("8=FIX.4.4 | 9=4");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        ok !$err;
+        is $err, undef;
     };
 
     subtest "incomplete length tag pair" => sub {
         my $buff = dehumanize("8=FIX.4.4 | 9=4");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        ok !$err;
+        is $err, undef;
     };
 
     subtest "wrong body length" => sub {
@@ -92,18 +93,18 @@ subtest "header & trail errors" => sub {
         my $buff = dehumanize("8=FIX.4.4 | 9=4 | ");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        ok !$err;
+        is $err, undef;
 
         $buff = dehumanize("8=FIX.4.4 | 9=4 | 10=01");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        ok !$err;
+        is $err, undef;
 
         # 10=A inside body
         $buff = $buff = dehumanize("8=FIX.4.4 | 9=4 | 10=A | ");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        ok !$err;
+        is $err, undef;
     };
 
     subtest "wrong checksum" => sub {
@@ -149,12 +150,12 @@ subtest "body errors" => sub {
 
 };
 
-subtest "simple logon message" => sub {
+subtest "simple message (Logon)" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=106 | ');
 
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
-    ok !$err;
+    is $err, undef;
 
     is $mi->name, 'Logon';
     is $mi->category, 'admin';
@@ -165,6 +166,26 @@ subtest "simple logon message" => sub {
     is $mi->value('EncryptMethod'), 'NONE';
     is $mi->value('HeartBtInt'), 60;
 };
+
+=cut
+
+subtest "message with component (Email)" => sub {
+    my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ');
+
+    my ($mi, $err) = $proto->parse_message(\$buff);
+    ok $mi;
+    is $err, undef;
+
+    is $mi->name, 'Logon';
+    is $mi->category, 'admin';
+    is $mi->value('SenderCompID'), 'me';
+    is $mi->value('TargetCompID'), 'you';
+    is $mi->value('MsgSeqNum'), '1';
+    is $mi->value('SendingTime'), '20090107-18:15:16';
+    is $mi->value('EncryptMethod'), 'NONE';
+    is $mi->value('HeartBtInt'), 60;
+};
+
 
 # TODO
 # feed by-byte valid message

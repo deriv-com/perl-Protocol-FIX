@@ -37,6 +37,8 @@ subtest "Logon Message" => sub {
     );
     ok $m;
 
+    is $m->{field_to_component}->{'EncryptMethod'}, 'Logon';
+
     my $s = $m->serialize([
         SenderCompID => 'me',
         TargetCompID => 'you',
@@ -75,6 +77,11 @@ subtest "Email Message" => sub {
         $proto,
     );
     ok $m;
+    is $m->{field_to_component}->{'RoutingGrp'}, 'Email';
+    is $m->{field_to_component}->{'LinesOfTextGrp'}, 'Email';
+    is $m->{field_to_component}->{'NoLinesOfText'}, 'LinesOfTextGrp';
+
+
     my $s = $m->serialize([
         SenderCompID => 'me',
         TargetCompID => 'you',

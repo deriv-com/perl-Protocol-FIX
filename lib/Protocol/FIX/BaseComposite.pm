@@ -21,6 +21,8 @@ sub new {
     my @composites;
     my @mandatory_composites;
     my %composite_by_name;
+    my %component_for;
+
     for (my $idx = 0; $idx < @$composites; $idx += 2) {
         my $c = $composites->[$idx];
         my $required = $composites->[$idx + 1];
@@ -41,6 +43,23 @@ sub new {
         push @composites, $c, ($required ? 1 : 0);
         push @mandatory_composites, $c->{name} if $required;
         $composite_by_name{$c->{name}} = [$c, $prerequisite_composite];
+
+        if (UNIVERSAL::isa($c, 'Protocol::FIX::Component')) {
+            my $sub_dependency = $c->{field_to_component};
+            for my $k (keys %$sub_dependency) {
+                if (exists $component_for{$k}) {
+                    die("Ambiguity when constructing component '$name': '$k' already points to '"
+                        . $component_for{$k} . "', trying to add another pointer to '" . $sub_dependency->{$k} . "'");
+                }
+                $component_for{$k} = $sub_dependency->{$k};
+            }
+        }
+        if (exists $component_for{$c->{name}}) {
+            die("Ambiguity when constructing component '$name': '"  . $c->{name} . "' already points to '"
+                . $component_for{$c->{name}} . "', trying to add another pointer to '" . $name . "'");
+        }
+        $component_for{$c->{name}} = $name;
+
     }
 
     my $obj = {
@@ -49,6 +68,7 @@ sub new {
         composites           => \@composites,
         composite_by_name    => \%composite_by_name,
         mandatory_composites => \@mandatory_composites,
+        field_to_component   => \%component_for,
     };
 
     return bless $obj, $class;
