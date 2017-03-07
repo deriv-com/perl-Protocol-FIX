@@ -145,8 +145,13 @@ sub _parse_body {
     return (undef, "Protocol error: MessageType '$msg_type' is not available")
         unless $message;
 
+    return _construct_message_instance($protocol, $message, \@tag_pairs);
+};
+
+sub _construct_message_instance {
+    my ($protocol, $message, $tag_pairs) = @_;
 
     1;
-};
+}
 
 1;
