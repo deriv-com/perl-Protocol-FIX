@@ -3,6 +3,8 @@ package Protocol::FIX::Field;
 use strict;
 use warnings;
 
+use Protocol::FIX;
+
 =x
 Known types:
 
@@ -34,13 +36,13 @@ UTCTIMESTAMP
 
 # anyting defined and not containing delimiter
 my $BOOLEAN_validator      = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
-my $STRING_validator       = sub { defined($_[0]) && $_[0] !~ /=/ };
+my $STRING_validator       = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
 my $INT_validator          = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
 my $LENGTH_validator       = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
 my $DATA_validator         = sub { defined($_[0]) && length($_[0]) > 0 };
 my $FLOAT_validator        = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
-my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^=]$/ };
-my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^=]{3}$/ };
+my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/ };
+my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]{3}$/ };
 my $COUNTRY_validator      = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/ };
 
 my $MONTHYEAR_validator    = sub {
@@ -161,6 +163,18 @@ sub check {
 
     return $result;
 }
+
+sub check_raw {
+    my ($self, $value) = @_;
+
+    my $type_checker = $per_type{$self->{type}};
+    my $result = $self->{values}
+        ? (defined($value) && exists $self->{values}->{by_id}->{$value})
+        : $per_type{$self->{type}}->($value);
+
+    return $result;
+}
+
 
 sub serialize {
     my ($self, $value) = @_;

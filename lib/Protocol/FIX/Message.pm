@@ -9,8 +9,6 @@ use UNIVERSAL;
 use mro;
 use parent qw/Protocol::FIX::BaseComposite/;
 
-my %MANAGED_COMPOSITES = map { $_ => 1 } qw/BeginString BodyLength MsgType CheckSum/;
-
 sub new {
     my ($class, $name, $category, $message_type, $composites, $protocol) = @_;
 
@@ -21,9 +19,6 @@ sub new {
         unless defined $message_type_string;
 
     my $serialized_message_type = $message_type_field->serialize($message_type_string);
-
-    my $serialized_begin_string = $protocol->field_by_name('BeginString')
-        ->serialize( $protocol->id );
 
     die "message category must be defined"
         if (!defined($category) || $category !~ /.+/);
@@ -37,7 +32,7 @@ sub new {
     my @body_composites;
     for(my $idx = 0; $idx < @all_composites; $idx += 2) {
         my $c = $all_composites[$idx];
-        next if exists $MANAGED_COMPOSITES{$c->{name}};
+        next if exists $protocol->managed_composites->{$c->{name}};
 
         push @body_composites, $c, $all_composites[$idx + 1];
     }
@@ -46,7 +41,7 @@ sub new {
 
     $obj->{category} = $category;
     $obj->{serialized} = {
-        begin_string => $serialized_begin_string,
+        begin_string => $protocol->{begin_string},
         message_type => $serialized_message_type,
     };
     $obj->{managed_composites} = {

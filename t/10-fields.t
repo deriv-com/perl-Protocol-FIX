@@ -32,9 +32,14 @@ subtest "STRING" => sub {
         ok $f->check('CANCEL');
         ok $f->check('REPLACE');
 
+        ok $f->check_raw('N');
+        ok $f->check_raw('C');
+        ok $f->check_raw('R');
+
         ok !$f->check(undef);
         ok !$f->check('NEw');
         ok !$f->check('something else');
+        ok !$f->check_raw('X');
     };
 };
 

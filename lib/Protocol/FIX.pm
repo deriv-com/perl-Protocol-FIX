@@ -13,17 +13,21 @@ use Protocol::FIX::Field;
 use Protocol::FIX::Group;
 use Protocol::FIX::BaseComposite;
 use Protocol::FIX::Message;
+use Protocol::FIX::Parser;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
 
 my $distribution = 'Protocol-FIX';
 
+my %MANAGED_COMPOSITES = map { $_ => 1 } qw/BeginString BodyLength MsgType CheckSum/;
+
 my %specificaion_for = (
     fix44 => 'FIX44.xml'
 );
 
 our $SEPARATOR = "\x{01}";
+our $TAG_SEPARATOR = "=";
 
 sub new {
     my ($class, $version) = @_;
@@ -184,7 +188,8 @@ sub _construct_messages {
     my ($self, $definition) = @_;
 
     my $messages_lookup = {
-        by_name => {},
+        by_name   => {},
+        by_number => {},
     };
     my $fields_lookup = $self->{fields_lookup};
     my $components_lookup = $self->{components_lookup};
@@ -222,6 +227,7 @@ sub _construct_messages {
 
         my $message = Protocol::FIX::Message->new($name, $category, $message_type, \@composites, $self);
         $messages_lookup->{by_name}->{$name} = $message;
+        $messages_lookup->{by_number}->{$message_type} = $message;
     }
 
     return $messages_lookup;
@@ -241,16 +247,19 @@ sub _construct_from_definition {
     my $header = $self->_construct_composite('header', $header_descr, $fields_lookup, $components_lookup);
     my $trailer = $self->_construct_composite('trailer', $trailer_descr, $fields_lookup, $components_lookup);
 
+    my $serialized_begin_string = $fields_lookup->{by_name}->{BeginString}->serialize( $protocol_id );
+
     $self->{id} = $protocol_id;
     $self->{header} = $header;
     $self->{trailer} = $trailer;
     $self->{fields_lookup} = $fields_lookup;
     $self->{components_lookup} = $components_lookup;
+    $self->{begin_string} = $serialized_begin_string;
 
     my $messages_lookup = $self->_construct_messages($definition);
     $self->{messages_lookup} = $messages_lookup;
-
 };
+
 
 sub field_by_name {
     my ($self, $field_name) = @_;
@@ -301,11 +310,19 @@ sub id {
     return shift->{id};
 }
 
+sub managed_composites {
+    return \%MANAGED_COMPOSITES;
+}
+
 sub serialize_message {
     my ($self, $message_name, $payload) = @_;
     my $message = $self->message_by_name($message_name);
     return $message->serialize($payload);
 }
+
+sub parse_message {
+    return Protocol::FIX::Parser::parse(@_);
+};
 
 
 1;
