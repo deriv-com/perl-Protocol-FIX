@@ -13,7 +13,7 @@ sub new {
         $by_name{$composite->{name}} = $value;
 
     };
-    return bless \%by_name,;
+    return bless \%by_name, $class;
 };
 
 sub value {
