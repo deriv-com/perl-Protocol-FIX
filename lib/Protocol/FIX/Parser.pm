@@ -3,8 +3,10 @@ package Protocol::FIX::Parser;
 use strict;
 use warnings;
 
-use Protocol::FIX qw/humanize/;
 use List::Util qw/first/;
+use Protocol::FIX qw/humanize/;
+use Protocol::FIX::TagsAccessor;
+use Protocol::FIX::MessageInstance;
 
 sub _parse_tag_pair {
     my ($protocol, $pair, $check_value) = @_;
@@ -145,13 +147,29 @@ sub _parse_body {
     return (undef, "Protocol error: MessageType '$msg_type' is not available")
         unless $message;
 
-    return _construct_message_instance($protocol, $message, \@tag_pairs);
+    my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs);
+    return (undef, $err) if $err;
+
+    return (new Protocol::FIX::MessageInstance($message, $ta));
 };
 
-sub _construct_message_instance {
-    my ($protocol, $message, $tag_pairs) = @_;
+sub _construct_tag_accessor {
+    my ($protocol, $composite, $tag_pairs) = @_;
 
-    1;
+    my @direct_pairs;
+    for my $pair (@$tag_pairs) {
+        my ($field, $value) = @$pair;
+
+        next if exists $protocol->managed_composites->{$field->{name}};
+
+        if ($composite->{composite_by_name}->{$field->{name}}) {
+            my $humanized_value = $field->{values}->{by_id}->{$value} // $value;
+            push @direct_pairs, $field => $humanized_value;
+        } else {
+            ...;
+        }
+    }
+    return (Protocol::FIX::TagsAccessor->new(\@direct_pairs));
 }
 
 1;

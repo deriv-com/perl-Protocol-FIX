@@ -5,9 +5,7 @@ use Test::More;
 use Test::Fatal;
 use Test::Warnings;
 
-use Protocol::FIX::Field;
-use Protocol::FIX::Group;
-use Protocol::FIX::Component;
+use Protocol::FIX;
 use Protocol::FIX::TagsAccessor;
 use Protocol::FIX::MessageInstance;
 

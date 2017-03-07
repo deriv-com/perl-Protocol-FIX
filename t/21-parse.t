@@ -149,19 +149,26 @@ subtest "body errors" => sub {
 
 };
 
-
 subtest "simple logon message" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=106 | ');
 
-    my ($m, $err) = $proto->parse_message(\$buff);
-    ok $m;
+    my ($mi, $err) = $proto->parse_message(\$buff);
+    ok $mi;
     ok !$err;
+
+    is $mi->name, 'Logon';
+    is $mi->category, 'admin';
+    is $mi->value('SenderCompID'), 'me';
+    is $mi->value('TargetCompID'), 'you';
+    is $mi->value('MsgSeqNum'), '1';
+    is $mi->value('SendingTime'), '20090107-18:15:16';
+    is $mi->value('EncryptMethod'), 'NONE';
+    is $mi->value('HeartBtInt'), 60;
 };
 
 # TODO
 # feed by-byte valid message
 # feed 2 serialized messages
-# fix checksum calculation - it should NOT contain body boundaries |body|?
 
 
 done_testing
