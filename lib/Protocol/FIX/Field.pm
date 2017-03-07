@@ -164,6 +164,11 @@ sub check {
     return $result;
 }
 
+sub has_mapping {
+    my $self = shift;
+    return exists $self->{values};
+}
+
 sub check_raw {
     my ($self, $value) = @_;
 

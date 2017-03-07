@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Protocol::FIX;
+use UNIVERSAL;
 
 sub new {
     my ($class, $name, $type, $composites) = @_;

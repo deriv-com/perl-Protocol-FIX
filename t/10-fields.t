@@ -18,6 +18,7 @@ subtest "STRING" => sub {
 
         ok !$f->check('='), "delimiter is not allowed";
         like exception { $f->serialize('=') }, qr/not acceptable/;
+        ok !$f->has_mapping;
     };
 
     subtest "string filed with enumerations" => sub {
@@ -26,6 +27,7 @@ subtest "STRING" => sub {
             C => 'CANCEL',
             R => 'REPLACE',
         });
+        ok $f->has_mapping;
         is $f->serialize('NEW'), '5=N';
 
         ok $f->check('NEW');
@@ -40,6 +42,8 @@ subtest "STRING" => sub {
         ok !$f->check('NEw');
         ok !$f->check('something else');
         ok !$f->check_raw('X');
+
+
     };
 };
 

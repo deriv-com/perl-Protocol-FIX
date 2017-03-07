@@ -163,7 +163,10 @@ sub _construct_tag_accessor {
         next if exists $protocol->managed_composites->{$field->{name}};
 
         if ($composite->{composite_by_name}->{$field->{name}}) {
-            my $humanized_value = $field->{values}->{by_id}->{$value} // $value;
+            my $humanized_value = $field->has_mapping
+                ? $field->{values}->{by_id}->{$value}
+                : $value
+                ;
             push @direct_pairs, $field => $humanized_value;
         } else {
             ...;

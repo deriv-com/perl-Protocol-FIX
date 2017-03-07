@@ -29,6 +29,11 @@ subtest "simple component 'CommissionData'" => sub {
     my $c = Protocol::FIX::Component->new('CommissionData', [$f_1 => 0, $f_2 => 0, $f_3 => 0, $f_4 => 0]);
     ok $c;
 
+    is $c->{field_to_component}->{'Commission'}, 'CommissionData';
+    is $c->{field_to_component}->{'CommType'}, 'CommissionData';
+    is $c->{field_to_component}->{'CommCurrency'}, 'CommissionData';
+    is $c->{field_to_component}->{'FundRenewWaiv'}, 'CommissionData';
+
     is humanize($c->serialize([Commission => 5.2, CommType => 'PER_UNIT'])),
         '12=5.2 | 13=1';
 };
@@ -43,6 +48,8 @@ subtest "component (AttrbGrp) with group(NoInstrAttrib)" => sub {
     my $g = Protocol::FIX::Group->new( $f_0, [$f_1 => 0, $f_2 => 0]);
     my $c = Protocol::FIX::Component->new('AttrbGrp', [$g => 0]);
     ok $c;
+
+    is $c->{field_to_component}->{'NoInstrAttrib'}, 'AttrbGrp';
 
     is humanize($c->serialize([NoInstrAttrib => [[InstrAttribType => 'FLAT', InstrAttribValue => 'abc']]])),
         '870=1 | 871=1 | 872=abc';
@@ -67,6 +74,11 @@ subtest "component (InstrumentExtension) with complex subcomponent (AttrbGrp)" =
         $of_1 => 0, $of_2 => 0, $c_inner => 0,
     ]);
     ok $c_outer;
+
+    is $c_outer->{field_to_component}->{'DeliveryForm'}, 'InstrumentExtension';
+    is $c_outer->{field_to_component}->{'PctAtRisk'}, 'InstrumentExtension';
+    is $c_outer->{field_to_component}->{'NoInstrAttrib'}, 'AttrbGrp';
+
 
     is humanize($c_outer->serialize([
         DeliveryForm  => 'BOOKENTRY',

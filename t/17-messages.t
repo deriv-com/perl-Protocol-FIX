@@ -111,5 +111,23 @@ subtest "Logon Message (with group)" => sub {
         '8=FIX.4.4 | 9=85 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=21 | 384=2 | 372=a | 385=S | 372=b | 385=R | 10=078';
 };
 
+subtest "MarketDataRequestReject Message (with subcomponent)" => sub {
+    my $m = $proto->message_by_name('MarketDataRequestReject');
+    ok $m;
+
+    my $s = $m->serialize([
+        SenderCompID => 'me',
+        TargetCompID => 'you',
+        MsgSeqNum   => 1,
+        SendingTime => '20090107-18:15:16',
+        MDReqID => 'abc',
+        MDRjctGrp => [
+            NoAltMDSource => [ [AltMDSourceID => 'def'] ],
+        ],
+    ]);
+    is humanize($s),
+        '8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127';
+};
+
 
 done_testing;
