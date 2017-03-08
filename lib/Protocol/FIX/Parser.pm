@@ -70,7 +70,7 @@ sub parse {
     my $body_length = do {
         my $pair_is_complete = @header_pairs > 2;
         my ($tag_pair, $err) = _parse_tag_pair($protocol, $header_pairs[1], $pair_is_complete);
-        return (undef, $err) if $err;
+        return (undef, $err) unless $tag_pair;
 
         my ($field, $value) = @$tag_pair;
         if ($field->{name} ne 'BodyLength') {
@@ -192,9 +192,11 @@ sub _construct_tag_accessor_group {
     my ($sub_composite, $required) = @$composite_desc;
 
     my @tag_accessors;
-    for (1 .. $value) {
+    for my $idx (1 .. $value) {
         my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
-        return (undef, "cannot construct ...") unless $ta;
+        return (undef, "Protocol error: cannot construct item #${idx} for ". $composite->{type}
+            . " '" . $composite->{name} . "' (" . $sub_composite->{type} . " '" . $sub_composite->{name} . "')" )
+            unless $ta;
         push @tag_accessors, $ta;
     }
     my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
@@ -231,8 +233,8 @@ sub _construct_tag_accessor {
             push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
         } else {
             # the error can occur only for top-level message
-            return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in"
-                . $composite->{type} . "'" . $composite->{type} . "'")
+            return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in "
+                . $composite->{type} . " '" . $composite->{name} . "'")
                 if ($fail_on_missing);
             last;
         }

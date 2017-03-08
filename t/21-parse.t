@@ -206,11 +206,57 @@ subtest "message with component (MarketDataRequestReject)" => sub {
         is $buff, '';
     };
 
+    subtest "byte-by-byte feeding" => sub {
+        for my $length (0 .. length($buff_copy) - 1) {
+            $buff = substr($buff_copy, 0, $length);
+            my ($mi, $err) = $proto->parse_message(\$buff);
+            is $mi, undef;
+            is $err, undef;
+        }
+    };
+};
+
+subtest "body errors" => sub {
+    subtest "unexpected field (BeginString)" => sub {
+        my $buff = dehumanize('8=FIX.4.4 | 9=72 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 8=FIX.4.4 | 816=1 | 817=def | 10=113 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        is $mi, undef;
+        is $err, "Protocol error: field 'BeginString' was not expected in message 'MarketDataRequestReject'";
+    };
+
+    subtest "unexpected field (HeartBtInt)" => sub {
+        my $buff = dehumanize('8=FIX.4.4 | 9=70 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 108=21 | 816=1 | 817=def | 10=238 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        is $mi, undef;
+        is $err, "Protocol error: field 'HeartBtInt' was not expected in message 'MarketDataRequestReject'";
+    };
+
+    subtest "too many groups (1 declared, send 2)" => sub {
+        my $buff = dehumanize('8=FIX.4.4 | 9=73 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 817=aaa | 10=128 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        is $mi, undef;
+        is $err, "...";
+    };
+
+    subtest "too few groups (2 declared, send 1)" => sub {
+        my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 10=128 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        is $mi, undef;
+        is $err, "Protocol error: cannot construct item #2 for component 'MDRjctGrp' (group 'NoAltMDSource')";
+    };
+
+    subtest "missing mandatory field" => sub {
+        fail "implement me";
+    };
+};
+
+subtest "message with group (Logon)" => sub {
+    fail "implement me";
+};
+
+subtest "Complex message: component, with group of components" => sub {
+    fail "implement me";
 };
 
 
-# TODO
-# feed by-byte valid message
-
-
-done_testing
+done_testing;
