@@ -123,7 +123,12 @@ sub parse {
         }
         $value;
     };
-    my ($message, $errors) = _parse_body($protocol, \$body);
+    my ($message, $error) = _parse_body($protocol, \$body);
+    return (undef, $error) if $error;
+    my $total_length = $consumed_length + $body_length + length($trailer);
+    $$buff_ref =~ s/.{$total_length}//;
+
+    return ($message);
 }
 
 sub _parse_body {

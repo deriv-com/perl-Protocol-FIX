@@ -185,6 +185,8 @@ subtest "message with component (MarketDataRequestReject)" => sub {
     ok $group;
     is scalar(@$group), 1;
     is $group->[0]->value('AltMDSourceID'), 'def';
+
+    is $buff, '';
 };
 
 
