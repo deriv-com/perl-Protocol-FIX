@@ -165,6 +165,17 @@ sub _construct_tag_accessor_component {
     return ([$sub_composite => $ta]);
 }
 
+sub _construct_tag_accessor_field {
+    my ($protocol, $composite, $tag_pairs) = @_;
+
+    my ($field, $value) = @{ shift(@$tag_pairs) };
+    my $humanized_value = $field->has_mapping
+        ? $field->{values}->{by_id}->{$value}
+        : $value
+        ;
+    return ([$field => $humanized_value]);
+}
+
 sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
@@ -194,11 +205,10 @@ sub _construct_tag_accessor {
                 my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
                 push @direct_pairs, $sub_composite => \@tag_accessors;
             } else {
-                my $humanized_value = $field->has_mapping
-                    ? $field->{values}->{by_id}->{$value}
-                    : $value
-                    ;
-                push @direct_pairs, $field => $humanized_value;
+                unshift @$tag_pairs, $pair;
+                my ($ta_descr, $error) = _construct_tag_accessor_field($protocol, $composite, $tag_pairs);
+                return (undef, $error) if ($error);
+                push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
             }
         } else {
             return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in"
