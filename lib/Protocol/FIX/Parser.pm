@@ -166,15 +166,12 @@ sub _construct_tag_accessor {
 
         if ($owner && ($owner ne $composite->{name})) {
             my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
-            my $sub_composites = $composite->{composite_by_name}->{$sub_composite_name};
+            my $composite_desc = $composite->{composite_by_name}->{$sub_composite_name};
+            my ($sub_composite, $required) = @$composite_desc;
             unshift @$tag_pairs, $pair;
-            for my $sc (@$sub_composites) {
-                my ($ta) = _construct_tag_accessor($protocol, $sc, $tag_pairs, 0);
-                if ($ta) {
-                    push @direct_pairs, $sc => $ta;
-                    last;
-                };
-            }
+            my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
+            push @direct_pairs, $sub_composite => $ta
+                if ($ta);
         } elsif ($composite->{composite_by_name}->{$field->{name}}) {
             my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
             my ($sub_composite, $required) = @$composite_desc;
