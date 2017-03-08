@@ -125,9 +125,11 @@ sub parse {
     };
     my ($message, $error) = _parse_body($protocol, \$body);
     return (undef, $error) if $error;
-    my $total_length = $consumed_length + $body_length + length($trailer);
-    $$buff_ref =~ s/.{$total_length}//;
 
+    # checksum surrounded by separators
+    my $trailer_length = 1 + length($checksum_pair) + 1;
+    my $total_length = $consumed_length + $body_length + $trailer_length;
+    $$buff_ref =~ s/.{$total_length}//sm;
     return ($message);
 }
 

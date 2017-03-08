@@ -168,31 +168,49 @@ subtest "simple message (Logon)" => sub {
 
 subtest "message with component (MarketDataRequestReject)" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ');
+    my $buff_copy = $buff;
 
-    my ($mi, $err) = $proto->parse_message(\$buff);
-    ok $mi;
-    is $err, undef;
+    my $check_message = sub {
+        my ($mi, $err) = @_;
+        ok $mi;
+        is $err, undef;
 
-    is $mi->name, 'MarketDataRequestReject';
-    is $mi->category, 'app';
-    is $mi->value('SenderCompID'), 'me';
-    is $mi->value('TargetCompID'), 'you';
-    is $mi->value('MsgSeqNum'), '1';
-    is $mi->value('SendingTime'), '20090107-18:15:16';
-    is $mi->value('MDReqID'), 'abc';
+        is $mi->name, 'MarketDataRequestReject';
+        is $mi->category, 'app';
+        is $mi->value('SenderCompID'), 'me';
+        is $mi->value('TargetCompID'), 'you';
+        is $mi->value('MsgSeqNum'), '1';
+        is $mi->value('SendingTime'), '20090107-18:15:16';
+        is $mi->value('MDReqID'), 'abc';
 
-    my $group = $mi->value('MDRjctGrp')->value('NoAltMDSource');
-    ok $group;
-    is scalar(@$group), 1;
-    is $group->[0]->value('AltMDSourceID'), 'def';
+        my $group = $mi->value('MDRjctGrp')->value('NoAltMDSource');
+        ok $group;
+        is scalar(@$group), 1;
+        is $group->[0]->value('AltMDSourceID'), 'def';
+    };
 
-    is $buff, '';
+    subtest "single message consumption" => sub {
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        $check_message->($mi, $err);
+        is $buff, '';
+    };
+
+    subtest "double message consumption" => sub {
+        $buff = $buff_copy . $buff_copy;
+        my ($mi1, $err1) = $proto->parse_message(\$buff);
+        $check_message->($mi1, $err1);
+        is $buff, $buff_copy;
+
+        my ($mi2, $err2) = $proto->parse_message(\$buff);
+        $check_message->($mi2, $err2);
+        is $buff, '';
+    };
+
 };
 
 
 # TODO
 # feed by-byte valid message
-# feed 2 serialized messages
 
 
 done_testing
