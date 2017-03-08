@@ -183,7 +183,7 @@ sub _construct_tag_accessor {
                     push @tag_accessors, $ta;
                 }
                 my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
-                return $group_accessor;
+                push @direct_pairs, $sub_composite => \@tag_accessors;
             } else {
                 my $humanized_value = $field->has_mapping
                     ? $field->{values}->{by_id}->{$value}
