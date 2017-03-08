@@ -136,9 +136,11 @@ sub _parse_body {
         $tag_pair;
     } @pairs;
 
-    my $msg_type_pair = first { $_->[0]->{name} eq 'MsgType' } @tag_pairs;
+    my $msg_pair_idx = first { $tag_pairs[$_]->[0]->{name} eq 'MsgType' } (0 .. @tag_pairs - 1);
     return (undef, "Protocol error: 'MsgType' was not found in body")
-        unless $msg_type_pair;
+        unless defined $msg_pair_idx;
+
+    my $msg_type_pair = splice @tag_pairs, $msg_pair_idx, 1;
 
     my ($field_msg_type, $msg_type) = @$msg_type_pair;
     my $message = $protocol->{messages_lookup}->{by_number}->{$msg_type};
@@ -176,14 +178,30 @@ sub _construct_tag_accessor_field {
     return ([$field => $humanized_value]);
 }
 
+sub _construct_tag_accessor_group {
+    my ($protocol, $composite, $tag_pairs) = @_;
+    my ($field, $value) = @{ shift(@$tag_pairs) };
+
+    my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
+    my ($sub_composite, $required) = @$composite_desc;
+
+    my @tag_accessors;
+    for (1 .. $value) {
+        my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
+        return (undef, "cannot construct ...") unless $ta;
+        push @tag_accessors, $ta;
+    }
+    my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
+    return ([$sub_composite => \@tag_accessors]);
+}
+
+
 sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
     my @direct_pairs;
     while (my $pair = shift(@$tag_pairs)) {
         my ($field, $value) = @$pair;
-
-        next if exists $protocol->managed_composites->{$field->{name}};
 
         my $owner = $composite->{field_to_component}->{$field->{name}};
 
@@ -196,14 +214,10 @@ sub _construct_tag_accessor {
             my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
             my ($sub_composite, $required) = @$composite_desc;
             if ($field->{type} eq 'NUMINGROUP') {
-                my @tag_accessors;
-                for (1 .. $value) {
-                    my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
-                    return (undef, "cannot construct ...") unless $ta;
-                    push @tag_accessors, $ta;
-                }
-                my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
-                push @direct_pairs, $sub_composite => \@tag_accessors;
+                unshift @$tag_pairs, $pair;
+                my ($ta_descr, $error) = _construct_tag_accessor_group($protocol, $composite, $tag_pairs);
+                return (undef, $error) if ($error);
+                push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
             } else {
                 unshift @$tag_pairs, $pair;
                 my ($ta_descr, $error) = _construct_tag_accessor_field($protocol, $composite, $tag_pairs);
