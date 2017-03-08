@@ -147,32 +147,62 @@ sub _parse_body {
     return (undef, "Protocol error: MessageType '$msg_type' is not available")
         unless $message;
 
-    my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs);
+    my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 1);
     return (undef, $err) if $err;
 
     return (new Protocol::FIX::MessageInstance($message, $ta));
 };
 
 sub _construct_tag_accessor {
-    my ($protocol, $composite, $tag_pairs) = @_;
+    my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
     my @direct_pairs;
-    for my $pair (@$tag_pairs) {
+    while (my $pair = shift(@$tag_pairs)) {
         my ($field, $value) = @$pair;
 
         next if exists $protocol->managed_composites->{$field->{name}};
 
-        if ($composite->{composite_by_name}->{$field->{name}}) {
-            my $humanized_value = $field->has_mapping
-                ? $field->{values}->{by_id}->{$value}
-                : $value
-                ;
-            push @direct_pairs, $field => $humanized_value;
+        my $owner = $composite->{field_to_component}->{$field->{name}};
+
+        if ($owner && ($owner ne $composite->{name})) {
+            my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
+            my $sub_composites = $composite->{composite_by_name}->{$sub_composite_name};
+            unshift @$tag_pairs, $pair;
+            for my $sc (@$sub_composites) {
+                my ($ta) = _construct_tag_accessor($protocol, $sc, $tag_pairs, 0);
+                if ($ta) {
+                    push @direct_pairs, $sc => $ta;
+                    last;
+                };
+            }
+        } elsif ($composite->{composite_by_name}->{$field->{name}}) {
+            my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
+            my ($sub_composite, $required) = @$composite_desc;
+            if ($field->{type} eq 'NUMINGROUP') {
+                my @tag_accessors;
+                for (1 .. $value) {
+                    my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
+                    return (undef, "cannot construct ...") unless $ta;
+                    push @tag_accessors, $ta;
+                }
+                my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
+                return $group_accessor;
+            } else {
+                my $humanized_value = $field->has_mapping
+                    ? $field->{values}->{by_id}->{$value}
+                    : $value
+                    ;
+                push @direct_pairs, $field => $humanized_value;
+            }
         } else {
-            ...;
+            return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in"
+                . $composite->{type} . "'" . $composite->{type} . "'")
+                if ($fail_on_missing);
+
+            last;
         }
     }
-    return (Protocol::FIX::TagsAccessor->new(\@direct_pairs));
+    return (@direct_pairs ? Protocol::FIX::TagsAccessor->new(\@direct_pairs) : ());
 }
 
 1;

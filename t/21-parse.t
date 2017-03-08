@@ -14,7 +14,6 @@ sub dehumanize {
     return $buff =~ s/ \| /\x{01}/gr;
 };
 
-=x
 subtest "header & trail errors" => sub {
     my ($m, $err);
 
@@ -167,23 +166,25 @@ subtest "simple message (Logon)" => sub {
     is $mi->value('HeartBtInt'), 60;
 };
 
-=cut
-
-subtest "message with component (Email)" => sub {
+subtest "message with component (MarketDataRequestReject)" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ');
 
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
     is $err, undef;
 
-    is $mi->name, 'Logon';
-    is $mi->category, 'admin';
+    is $mi->name, 'MarketDataRequestReject';
+    is $mi->category, 'app';
     is $mi->value('SenderCompID'), 'me';
     is $mi->value('TargetCompID'), 'you';
     is $mi->value('MsgSeqNum'), '1';
     is $mi->value('SendingTime'), '20090107-18:15:16';
-    is $mi->value('EncryptMethod'), 'NONE';
-    is $mi->value('HeartBtInt'), 60;
+    is $mi->value('MDReqID'), 'abc';
+
+    my $group = $mi->value('MDRjctGrp')->value('NoAltMDSource');
+    ok $group;
+    is scalar(@$group), 1;
+    is $group->[0]->value('AltMDSourceID'), 'def';
 };
 
 
