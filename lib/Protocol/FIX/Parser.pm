@@ -153,6 +153,18 @@ sub _parse_body {
     return (new Protocol::FIX::MessageInstance($message, $ta));
 };
 
+sub _construct_tag_accessor_component {
+    my ($protocol, $composite, $tag_pairs) = @_;
+    my $field = $tag_pairs->[0]->[0];
+
+    my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
+    my $composite_desc = $composite->{composite_by_name}->{$sub_composite_name};
+    my ($sub_composite, $required) = @$composite_desc;
+    my ($ta, $error) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
+    return (undef, $error) if ($error);
+    return ([$sub_composite => $ta]);
+}
+
 sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
@@ -165,13 +177,10 @@ sub _construct_tag_accessor {
         my $owner = $composite->{field_to_component}->{$field->{name}};
 
         if ($owner && ($owner ne $composite->{name})) {
-            my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
-            my $composite_desc = $composite->{composite_by_name}->{$sub_composite_name};
-            my ($sub_composite, $required) = @$composite_desc;
             unshift @$tag_pairs, $pair;
-            my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
-            push @direct_pairs, $sub_composite => $ta
-                if ($ta);
+            my ($ta_descr, $error) = _construct_tag_accessor_component($protocol, $composite, $tag_pairs);
+            return (undef, $error) if ($error);
+            push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
         } elsif ($composite->{composite_by_name}->{$field->{name}}) {
             my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
             my ($sub_composite, $required) = @$composite_desc;
