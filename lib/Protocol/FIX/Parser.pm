@@ -151,7 +151,6 @@ sub _parse_body {
 
     my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 1);
     return (undef, $err) if $err;
-
     return (new Protocol::FIX::MessageInstance($message, $ta));
 };
 
@@ -200,35 +199,34 @@ sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
     my @direct_pairs;
-    while (my $pair = shift(@$tag_pairs)) {
-        my ($field, $value) = @$pair;
+    while (@$tag_pairs) {
 
+        # non-destructive look ahead
+        my $field = $tag_pairs->[0]->[0];
         my $owner = $composite->{field_to_component}->{$field->{name}};
 
-        if ($owner && ($owner ne $composite->{name})) {
-            unshift @$tag_pairs, $pair;
-            my ($ta_descr, $error) = _construct_tag_accessor_component($protocol, $composite, $tag_pairs);
+        # The logic is following:
+        # 1. try to construct sub-components (if there are fields pointing to them)
+        # 2. otherwise try to construct field group
+        # 3. or simple (single) field
+        my $constructor = ($owner && ($owner ne $composite->{name}))
+            ? \&_construct_tag_accessor_component
+            : ($composite->{composite_by_name}->{$field->{name}})
+                ? $field->{type} eq 'NUMINGROUP'
+                    ? \&_construct_tag_accessor_group
+                    : \&_construct_tag_accessor_field
+                : undef
+            ;
+
+        if ($constructor) {
+            my ($ta_descr, $error) = $constructor->($protocol, $composite, $tag_pairs);
             return (undef, $error) if ($error);
             push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
-        } elsif ($composite->{composite_by_name}->{$field->{name}}) {
-            my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
-            my ($sub_composite, $required) = @$composite_desc;
-            if ($field->{type} eq 'NUMINGROUP') {
-                unshift @$tag_pairs, $pair;
-                my ($ta_descr, $error) = _construct_tag_accessor_group($protocol, $composite, $tag_pairs);
-                return (undef, $error) if ($error);
-                push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
-            } else {
-                unshift @$tag_pairs, $pair;
-                my ($ta_descr, $error) = _construct_tag_accessor_field($protocol, $composite, $tag_pairs);
-                return (undef, $error) if ($error);
-                push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
-            }
         } else {
+            # the error can occur only for top-level message
             return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in"
                 . $composite->{type} . "'" . $composite->{type} . "'")
                 if ($fail_on_missing);
-
             last;
         }
     }
