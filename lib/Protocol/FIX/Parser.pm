@@ -208,6 +208,7 @@ sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $one_item_only) = @_;
 
     my @direct_pairs;
+    my %parsed_subcomposites;
     while (@$tag_pairs) {
 
         # non-destructive look ahead
@@ -230,7 +231,9 @@ sub _construct_tag_accessor {
         if ($constructor) {
             my ($ta_descr, $error) = $constructor->($protocol, $composite, $tag_pairs);
             return (undef, $error) if ($error);
-            push @direct_pairs, $ta_descr->[0] => $ta_descr->[1];
+            my ($sub_composite, $tags_accessor) = @$ta_descr;
+            push @direct_pairs, $sub_composite => $tags_accessor;
+            $parsed_subcomposites{$sub_composite->{name}} = 1;
         } else {
             # the error can occur only for top-level message
             return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in "
