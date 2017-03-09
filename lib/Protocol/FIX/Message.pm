@@ -81,6 +81,7 @@ sub serialize {
         $body_length,
         $body,
         $checksum,
+        ''
     );
 }
 
