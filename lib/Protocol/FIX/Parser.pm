@@ -156,7 +156,7 @@ sub _parse_body {
     return (undef, "Protocol error: MessageType '$msg_type' is not available")
         unless $message;
 
-    my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 0);
+    my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 1);
     return (undef, $err) if $err;
     return (new Protocol::FIX::MessageInstance($message, $ta));
 };
@@ -168,7 +168,7 @@ sub _construct_tag_accessor_component {
     my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
     my $composite_desc = $composite->{composite_by_name}->{$sub_composite_name};
     my ($sub_composite, $required) = @$composite_desc;
-    my ($ta, $error) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 1);
+    my ($ta, $error) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
     return (undef, $error) if ($error);
     return ([$sub_composite => $ta]);
 }
@@ -193,7 +193,7 @@ sub _construct_tag_accessor_group {
 
     my @tag_accessors;
     for my $idx (1 .. $value) {
-        my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 1);
+        my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
         return (undef, "Protocol error: cannot construct item #${idx} for ". $composite->{type}
             . " '" . $composite->{name} . "' (" . $sub_composite->{type} . " '" . $sub_composite->{name} . "')" )
             unless $ta;
@@ -205,7 +205,7 @@ sub _construct_tag_accessor_group {
 
 
 sub _construct_tag_accessor {
-    my ($protocol, $composite, $tag_pairs, $one_item_only) = @_;
+    my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
 
     my @direct_pairs;
     my %parsed_subcomposites;
@@ -213,6 +213,10 @@ sub _construct_tag_accessor {
 
         # non-destructive look ahead
         my $field = $tag_pairs->[0]->[0];
+
+        # do not look ahead too much, i.e. for group it is enough to construct just one item
+        last if $parsed_subcomposites{$field->{name}};
+
         my $owner = $composite->{field_to_component}->{$field->{name}};
 
         # The logic is following:
@@ -238,9 +242,9 @@ sub _construct_tag_accessor {
             # the error can occur only for top-level message
             return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in "
                 . $composite->{type} . " '" . $composite->{name} . "'")
-                unless ($one_item_only);
+                if $fail_on_missing;
+            last;
         }
-        last if $one_item_only;
     }
     for my $mandatory_composite (@{ $composite->{mandatory_composites} // [] }) {
         if (! exists $parsed_subcomposites{$mandatory_composite}) {

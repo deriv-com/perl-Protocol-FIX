@@ -166,6 +166,7 @@ subtest "simple message (Logon)" => sub {
     is $mi->value('HeartBtInt'), 60;
 };
 
+
 subtest "message with component (MarketDataRequestReject)" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ');
     my $buff_copy = $buff;
@@ -216,7 +217,7 @@ subtest "message with component (MarketDataRequestReject)" => sub {
     };
 
     subtest "2 entities in group" => sub {
-        $buff = dehumanize('8=FIX.4.4 | 9=74 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 817=ghjl | 10=003 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=74 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 817=ghjl | 10=003 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         ok $mi;
         is $err, undef;
@@ -261,7 +262,17 @@ subtest "body errors" => sub {
 };
 
 subtest "message with group (Logon)" => sub {
-    fail "implement me";
+    my $buff = dehumanize('8=FIX.4.4 | 9=75 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 384=1 | 372=abc | 385=S | 10=169 | ');
+
+    my ($mi, $err) = $proto->parse_message(\$buff);
+    ok $mi;
+    is $err, undef;
+
+    my $group = $mi->value('NoMsgTypes');
+    ok $group;
+    is scalar(@$group), 1;
+    is $group->[0]->value('RefMsgType'), 'abc';
+    is $group->[0]->value('MsgDirection'), 'SEND';
 };
 
 subtest "Complex message: component, with group of components" => sub {
