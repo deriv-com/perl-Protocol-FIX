@@ -256,7 +256,7 @@ subtest "body errors" => sub {
         my $buff = dehumanize('8=FIX.4.4 | 9=57 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 816=1 | 817=def | 10=129 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
-        is $err, "...";
+        is $err, "Protocol error: 'MDReqID' is mandatory for message 'MarketDataRequestReject'";
     };
 };
 

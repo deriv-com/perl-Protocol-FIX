@@ -242,6 +242,12 @@ sub _construct_tag_accessor {
         }
         last if $one_item_only;
     }
+    for my $mandatory_composite (@{ $composite->{mandatory_composites} // [] }) {
+        if (! exists $parsed_subcomposites{$mandatory_composite}) {
+            return (undef, "Protocol error: '$mandatory_composite' is mandatory for "
+                . $composite->{type} . " '" . $composite->{name} . "'");
+        }
+    }
     return (@direct_pairs ? Protocol::FIX::TagsAccessor->new(\@direct_pairs) : ());
 }
 
