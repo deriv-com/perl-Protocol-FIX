@@ -214,6 +214,13 @@ subtest "message with component (MarketDataRequestReject)" => sub {
             is $err, undef;
         }
     };
+
+    subtest "2 entities in group" => sub {
+        $buff = dehumanize('8=FIX.4.4 | 9=74 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 817=ghjl | 10=003 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        ok $mi;
+        is $err, undef;
+    };
 };
 
 subtest "body errors" => sub {
@@ -235,7 +242,7 @@ subtest "body errors" => sub {
         my $buff = dehumanize('8=FIX.4.4 | 9=73 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 817=aaa | 10=128 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
-        is $err, "...";
+        is $err, "Protocol error: field 'AltMDSourceID' was not expected in message 'MarketDataRequestReject'";
     };
 
     subtest "too few groups (2 declared, send 1)" => sub {
@@ -246,7 +253,10 @@ subtest "body errors" => sub {
     };
 
     subtest "missing mandatory field" => sub {
-        fail "implement me";
+        my $buff = dehumanize('8=FIX.4.4 | 9=57 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 816=1 | 817=def | 10=129 | ');
+        my ($mi, $err) = $proto->parse_message(\$buff);
+        is $mi, undef;
+        is $err, "...";
     };
 };
 
@@ -257,6 +267,5 @@ subtest "message with group (Logon)" => sub {
 subtest "Complex message: component, with group of components" => sub {
     fail "implement me";
 };
-
 
 done_testing;
