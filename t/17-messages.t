@@ -137,4 +137,28 @@ subtest "MarketDataRequestReject Message (with subcomponent)" => sub {
 };
 
 
+subtest "IOI message simple component + complex component (subcomponent + group)" => sub {
+    my $m = $proto->message_by_name('IOI');
+    ok $m;
+    my $s = $m->serialize([
+        SenderCompID => 'me',
+        TargetCompID => 'you',
+        MsgSeqNum   => 1,
+        SendingTime => '20090107-18:15:16',
+        IOIID => 'abc',
+        IOITransType => 'CANCEL',
+        IOIQty => 'LARGE',
+        Side => 'BORROW',
+        Instrument => [
+            Symbol => 'EURUSD',
+            EvntGrp => [ NoEvents => [ [EventType => 'PUT'], [EventType => 'CALL'], [EventType => 'OTHER'] ] ],
+        ],
+        OrderQtyData => [
+            OrderQty => '499',
+        ],
+    ]);
+    is humanize($s),
+        '8=FIX.4.4 | 9=107 | 35=6 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=050';
+};
+
 done_testing;

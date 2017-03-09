@@ -14,6 +14,7 @@ sub dehumanize {
     return $buff =~ s/ \| /\x{01}/gr;
 };
 
+
 subtest "header & trail errors" => sub {
     my ($m, $err);
 
@@ -276,7 +277,25 @@ subtest "message with group (Logon)" => sub {
 };
 
 subtest "Complex message: component, with group of components" => sub {
-    fail "implement me";
+    my $buff = dehumanize('8=FIX.4.4 | 9=107 | 35=6 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16'
+        . ' | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=050 | ');
+
+    my ($mi, $err) = $proto->parse_message(\$buff);
+    ok $mi;
+    is $err, undef;
+
+    is $mi->value('IOIID'), 'abc';
+    is $mi->value('IOITransType'), 'CANCEL';
+    is $mi->value('IOIQty'), 'LARGE';
+    is $mi->value('Side'), 'BORROW';
+    is $mi->value('OrderQtyData')->value('OrderQty'), '499';
+    is $mi->value('Instrument')->value('Symbol'), 'EURUSD';
+
+    my $g = $mi->value('Instrument')->value('EvntGrp')->value('NoEvents');
+    ok $g;
+    is $g->[0]->value('EventType'), 'PUT';
+    is $g->[1]->value('EventType'), 'CALL';
+    is $g->[2]->value('EventType'), 'OTHER';
 };
 
 done_testing;
