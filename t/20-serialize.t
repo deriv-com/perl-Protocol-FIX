@@ -19,7 +19,7 @@ subtest "Logon Message serialization" => sub {
         HeartBtInt    => 60,
     ]);
     is humanize($buff),
-        '8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=106 | ';
+        '8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=108 | ';
 };
 
 subtest "Advertisement Message serialization (i.e. with component)" => sub {
@@ -35,7 +35,7 @@ subtest "Advertisement Message serialization (i.e. with component)" => sub {
         Instrument    => [ Symbol => 'USDJPY'],
     ]);
     is humanize($buff),
-        '8=FIX.4.4 | 9=76 | 35=7 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 2=some-id | 5=N | 4=B | 53=5 | 55=USDJPY | 10=057 | ';
+        '8=FIX.4.4 | 9=76 | 35=7 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 2=some-id | 5=N | 4=B | 53=5 | 55=USDJPY | 10=062 | ';
 };
 
 subtest "Logon Message serialization (i.e. with group)" => sub {
@@ -52,7 +52,7 @@ subtest "Logon Message serialization (i.e. with group)" => sub {
         ],
     ]);
     is humanize($buff),
-        '8=FIX.4.4 | 9=89 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 384=2 | 372=abc | 385=S | 372=def | 385=R | 10=227 | ';
+        '8=FIX.4.4 | 9=89 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 384=2 | 372=abc | 385=S | 372=def | 385=R | 10=236 | ';
 };
 
 

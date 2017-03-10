@@ -84,7 +84,8 @@ sub parse {
     };
 
     return if $buff_length <= $consumed_length + $body_length;
-    my $trailer = substr($$buff_ref, $consumed_length + $body_length);
+    # -1 is used to include separator
+    my $trailer = substr($$buff_ref, $consumed_length + $body_length - 1);
 
     # -1 is included as it is terminator / end of message boundary
     my @trailer_pairs = split $Protocol::FIX::SEPARATOR, $trailer, -1;
@@ -112,15 +113,16 @@ sub parse {
                         . Protocol::FIX::humanize($checksum_pair) . "'")
         }
 
-        $body = substr($$buff_ref, $consumed_length, $body_length);
+        my $header_body = substr($$buff_ref, 0, $consumed_length + $body_length);
         my $sum = 0;
-        $sum += ord $_ for split //, $body;
+        $sum += ord $_ for split //, $header_body;
         $sum %= 256;
 
         if ($sum != $value) {
             return (undef, "Protocol error: Checksum mismatch;  got $sum, expected $value for message '"
-                        . Protocol::FIX::humanize($body) . "'");
+                        . Protocol::FIX::humanize($header_body) . "'");
         }
+        $body = substr($$buff_ref, $consumed_length, $body_length);
         $value;
     };
     my ($message, $error) = _parse_body($protocol, \$body);

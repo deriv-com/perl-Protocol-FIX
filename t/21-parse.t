@@ -14,7 +14,6 @@ sub dehumanize {
     return $buff =~ s/ \| /\x{01}/gr;
 };
 
-
 subtest "header & trail errors" => sub {
     my ($m, $err);
 
@@ -126,7 +125,7 @@ subtest "header & trail errors" => sub {
         $buff = dehumanize("8=FIX.4.4 | 9=3 | ... | 10=015 | ");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
-        is $err, "Protocol error: Checksum mismatch;  got 138, expected 015 for message '...'";
+        is $err, "Protocol error: Checksum mismatch;  got 85, expected 015 for message '8=FIX.4.4 | 9=3 | ...'";
     };
 
 };
@@ -135,14 +134,14 @@ subtest "body errors" => sub {
     my ($m, $err, $buff);
 
     subtest "no MsgType" => sub {
-        $buff = dehumanize("8=FIX.4.4 | 9=3 | 9=4 | 10=170 | ");
+        $buff = dehumanize("8=FIX.4.4 | 9=3 | 9=4 | 10=117 | ");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
         is $err, "Protocol error: 'MsgType' was not found in body";
     };
 
     subtest "wrong MsgType" => sub {
-        $buff = dehumanize("8=FIX.4.4 | 9=5 | 35=ZZ | 10=089 | ");
+        $buff = dehumanize("8=FIX.4.4 | 9=5 | 35=ZZ | 10=038 | ");
         ($m, $err) = $proto->parse_message(\$buff);
         ok !$m;
         is $err, "Protocol error: value for field 'MsgType' does not pass validation in tag pair '35=ZZ'";
@@ -151,7 +150,7 @@ subtest "body errors" => sub {
 };
 
 subtest "simple message (Logon)" => sub {
-    my $buff = dehumanize('8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=106 | ');
+    my $buff = dehumanize('8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 10=108 | ');
 
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
@@ -167,9 +166,8 @@ subtest "simple message (Logon)" => sub {
     is $mi->value('HeartBtInt'), 60;
 };
 
-
 subtest "message with component (MarketDataRequestReject)" => sub {
-    my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ');
+    my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=130 | ');
     my $buff_copy = $buff;
 
     my $check_message = sub {
@@ -218,7 +216,7 @@ subtest "message with component (MarketDataRequestReject)" => sub {
     };
 
     subtest "2 entities in group" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=74 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 817=ghjl | 10=003 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=74 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 817=ghjl | 10=006 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         ok $mi;
         is $err, undef;
@@ -227,35 +225,35 @@ subtest "message with component (MarketDataRequestReject)" => sub {
 
 subtest "body errors" => sub {
     subtest "unexpected field (BeginString)" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=72 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 8=FIX.4.4 | 816=1 | 817=def | 10=113 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=72 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 8=FIX.4.4 | 816=1 | 817=def | 10=114 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
         is $err, "Protocol error: field 'BeginString' was not expected in message 'MarketDataRequestReject'";
     };
 
     subtest "unexpected field (HeartBtInt)" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=70 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 108=21 | 816=1 | 817=def | 10=238 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=70 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 108=21 | 816=1 | 817=def | 10=237 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
         is $err, "Protocol error: field 'HeartBtInt' was not expected in message 'MarketDataRequestReject'";
     };
 
     subtest "too many groups (1 declared, send 2)" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=73 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 817=aaa | 10=128 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=73 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 817=aaa | 10=130 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
         is $err, "Protocol error: field 'AltMDSourceID' was not expected in message 'MarketDataRequestReject'";
     };
 
     subtest "too few groups (2 declared, send 1)" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 10=128 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=2 | 817=def | 10=131 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
         is $err, "Protocol error: cannot construct item #2 for component 'MDRjctGrp' (group 'NoAltMDSource')";
     };
 
     subtest "missing mandatory field" => sub {
-        my $buff = dehumanize('8=FIX.4.4 | 9=57 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 816=1 | 817=def | 10=129 | ');
+        my $buff = dehumanize('8=FIX.4.4 | 9=57 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 816=1 | 817=def | 10=133 | ');
         my ($mi, $err) = $proto->parse_message(\$buff);
         is $mi, undef;
         is $err, "Protocol error: 'MDReqID' is mandatory for message 'MarketDataRequestReject'";
@@ -263,7 +261,7 @@ subtest "body errors" => sub {
 };
 
 subtest "message with group (Logon)" => sub {
-    my $buff = dehumanize('8=FIX.4.4 | 9=75 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 384=1 | 372=abc | 385=S | 10=169 | ');
+    my $buff = dehumanize('8=FIX.4.4 | 9=75 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=60 | 384=1 | 372=abc | 385=S | 10=173 | ');
 
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
@@ -278,7 +276,7 @@ subtest "message with group (Logon)" => sub {
 
 subtest "Complex message: component, with group of components" => sub {
     my $buff = dehumanize('8=FIX.4.4 | 9=107 | 35=6 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16'
-        . ' | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=050 | ');
+        . ' | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=098 | ');
 
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
@@ -296,6 +294,13 @@ subtest "Complex message: component, with group of components" => sub {
     is $g->[0]->value('EventType'), 'PUT';
     is $g->[1]->value('EventType'), 'CALL';
     is $g->[2]->value('EventType'), 'OTHER';
+};
+
+subtest "Logon message (from 3rd-party app)" => sub {
+    my $buff = dehumanize('8=FIX.4.4 | 9=97 | 35=A | 49=CLIENT1 | 52=20170310-09:36:44.000 | 56=FixServer | 34=1 | 98=0 | 108=30 | 553=fake-panda | 554=secret | 10=145 | ');
+    my ($mi, $err) = $proto->parse_message(\$buff);
+    ok $mi;
+    is $err, undef;
 };
 
 done_testing;

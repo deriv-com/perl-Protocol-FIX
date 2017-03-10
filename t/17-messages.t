@@ -48,7 +48,7 @@ subtest "Logon Message" => sub {
         HeartBtInt => 21,
     ]);
     is humanize($s),
-        '8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=21 | 10=103 | ';
+        '8=FIX.4.4 | 9=55 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=21 | 10=105 | ';
 };
 
 subtest "Email Message" => sub {
@@ -94,7 +94,7 @@ subtest "Email Message" => sub {
         ],
     ]);
     is humanize($s),
-        '8=FIX.4.4 | 9=89 | 35=C | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 164=thread-id | 147=Hello! | 33=1 | 58=message body | 10=189 | ';
+        '8=FIX.4.4 | 9=89 | 35=C | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 164=thread-id | 147=Hello! | 33=1 | 58=message body | 10=198 | ';
 };
 
 
@@ -115,7 +115,7 @@ subtest "Logon Message (with group)" => sub {
         ],
     ]);
     is humanize($s),
-        '8=FIX.4.4 | 9=85 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=21 | 384=2 | 372=a | 385=S | 372=b | 385=R | 10=078 | ';
+        '8=FIX.4.4 | 9=85 | 35=A | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 98=0 | 108=21 | 384=2 | 372=a | 385=S | 372=b | 385=R | 10=083 | ';
 };
 
 subtest "MarketDataRequestReject Message (with subcomponent)" => sub {
@@ -133,7 +133,7 @@ subtest "MarketDataRequestReject Message (with subcomponent)" => sub {
         ],
     ]);
     is humanize($s),
-        '8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=127 | ';
+        '8=FIX.4.4 | 9=65 | 35=Y | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 262=abc | 816=1 | 817=def | 10=130 | ';
 };
 
 
@@ -158,7 +158,7 @@ subtest "IOI message simple component + complex component (subcomponent + group)
         ],
     ]);
     is humanize($s),
-        '8=FIX.4.4 | 9=107 | 35=6 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=050 | ';
+        '8=FIX.4.4 | 9=107 | 35=6 | 49=me | 56=you | 34=1 | 52=20090107-18:15:16 | 23=abc | 28=C | 27=L | 54=G | 55=EURUSD | 864=3 | 865=1 | 865=2 | 865=99 | 38=499 | 10=098 | ';
 };
 
 done_testing;

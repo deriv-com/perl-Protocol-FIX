@@ -69,17 +69,22 @@ sub serialize {
     my $body_length = $self->{managed_composites}->{BodyLength}
         ->serialize(length($body));
 
+    my $header_body = join(
+        $Protocol::FIX::SEPARATOR,
+        $self->{serialized}->{begin_string},
+        $body_length,
+        $body,
+    );
+
     my $sum = 0;
-    $sum += ord $_ for split //, $body;
+    $sum += ord $_ for split //, $header_body;
     $sum %= 256;
     my $checksum = $self->{managed_composites}->{CheckSum}
         ->serialize(sprintf('%03d', $sum));
 
     return join(
         $Protocol::FIX::SEPARATOR,
-        $self->{serialized}->{begin_string},
-        $body_length,
-        $body,
+        $header_body,
         $checksum,
         ''
     );
