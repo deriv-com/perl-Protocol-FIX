@@ -33,6 +33,9 @@ my ($message_instance, $error) = $proto->parse_message(\$serialized);
 ok $message_instance;
 is $error, undef;
 
+is $message_instance->name, 'IOI', "message name";
+is $message_instance->category, 'app', "message category";
+
 is $message_instance->value('SenderCompID'), 'me', "Access to tags from header";
 is $message_instance->value('IOITransType'), 'CANCEL', "Access to tags from message body";
 is $message_instance->value('OrderQtyData')->value('OrderQty'), '499',
