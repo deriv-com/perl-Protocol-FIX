@@ -75,7 +75,10 @@ sub _construct_fields {
         by_name => {},
     };
 
-    for my $field_descr ( @{ $definition->{fix}->{fields}->{field} } ) {
+    my $fields_arr = $definition->{fix}->{fields}->{field};
+    $fields_arr = [$fields_arr] if ref($fields_arr) ne 'ARRAY';
+
+    for my $field_descr ( @$fields_arr ) {
         my ($name, $number, $type) = map { $field_descr->{$_} } qw/-name -number -type/;
         my $values;
         my $values_arr = $field_descr->{value};
@@ -194,7 +197,10 @@ sub _construct_messages {
     my $fields_lookup = $self->{fields_lookup};
     my $components_lookup = $self->{components_lookup};
 
-    my @messages_queue = @{ $definition->{fix}->{messages}->{message} };
+    my $messages_arr = $definition->{fix}->{messages}->{message};
+    $messages_arr = [$messages_arr] unless ref($messages_arr) eq 'ARRAY';
+
+    my @messages_queue = @$messages_arr;
     while (my $message_descr = shift @messages_queue) {
         my @composites;
         my ($name, $category, $message_type) = map { $message_descr->{$_} } qw/-name -msgcat -msgtype/;
@@ -265,7 +271,7 @@ sub field_by_name {
     my ($self, $field_name) = @_;
     my $field = $self->{fields_lookup}->{by_name}->{$field_name};
     if (!$field) {
-       die("Field '$field_name' is not available in protocol" . $self->{version});
+       die("Field '$field_name' is not available in protocol " . $self->{version});
     }
     return $field;
 };
@@ -324,5 +330,36 @@ sub parse_message {
     return Protocol::FIX::Parser::parse(@_);
 };
 
+sub _merge_lookups {
+    my ($old, $new) = @_;
+
+    return unless $new;
+
+    for my $k (keys %$new) {
+        $old->{$k} = $new->{$k};
+    }
+}
+
+sub extension {
+    my ($self, $extension_path) = @_;
+
+    my $xml = path($extension_path)->slurp;
+    my $definition = xml2hash $xml;
+
+    my ($type, $major, $minor) = map { $definition->{fix}->{$_} } qw/-type -major -minor/;
+    my $extension_id = join('.', $type, $major, $minor);
+    my $protocol_id = $self->{id};
+    die ("Extension ID ($extension_id) does not match Protocol ID ($protocol_id)")
+        unless $extension_id eq $protocol_id;
+
+    my $new_fields_lookup = $self->_construct_fields($definition);
+    _merge_lookups($self->{fields_lookup}->{by_name}, $new_fields_lookup->{by_name});
+    _merge_lookups($self->{fields_lookup}->{by_number}, $new_fields_lookup->{by_number});
+
+    my $new_messsages_lookup = $self->_construct_messages($definition);
+    _merge_lookups($self->{messages_lookup}->{by_name}, $new_messsages_lookup->{by_name});
+
+    return $self;
+}
 
 1;

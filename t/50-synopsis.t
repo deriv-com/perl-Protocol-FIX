@@ -7,7 +7,7 @@ use Test::Warnings;
 
 use Protocol::FIX;
 
-my $proto = Protocol::FIX->new('FIX44');
+my $proto = Protocol::FIX->new('FIX44')->extension('t/data/extension-sample.xml');
 
 my $serialized = $proto->message_by_name('IOI')
     ->serialize([
