@@ -155,7 +155,7 @@ sub _parse_body {
 
     my $msg_type_pair = splice @tag_pairs, $msg_pair_idx, 1;
 
-    my ($field_msg_type, $msg_type) = @$msg_type_pair;
+    my (undef, $msg_type) = @$msg_type_pair;
     my $message = $protocol->{messages_lookup}->{by_number}->{$msg_type};
     # we don't die, as it might be possible to use custom message types
     # http://fixwiki.org/fixwiki/MsgType
@@ -173,14 +173,15 @@ sub _construct_tag_accessor_component {
 
     my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
     my $composite_desc     = $composite->{composite_by_name}->{$sub_composite_name};
-    my ($sub_composite, $required) = @$composite_desc;
+    # TODO: check for required in description?
+    my ($sub_composite) = @$composite_desc;
     my ($ta, $error) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
     return (undef, $error) if ($error);
     return ([$sub_composite => $ta]);
 }
 
 sub _construct_tag_accessor_field {
-    my ($protocol, $composite, $tag_pairs) = @_;
+    my (undef, undef, $tag_pairs) = @_;
 
     my ($field, $value) = @{shift(@$tag_pairs)};
     my $humanized_value =
@@ -195,7 +196,8 @@ sub _construct_tag_accessor_group {
     my ($field, $value) = @{shift(@$tag_pairs)};
 
     my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
-    my ($sub_composite, $required) = @$composite_desc;
+    # todo: check that group have required field?
+    my ($sub_composite, undef) = @$composite_desc;
 
     my @tag_accessors;
     for my $idx (1 .. $value) {
@@ -209,7 +211,6 @@ sub _construct_tag_accessor_group {
             unless $ta;
         push @tag_accessors, $ta;
     }
-    my $group_accessor = Protocol::FIX::TagsAccessor->new([$sub_composite => \@tag_accessors]);
     return ([$sub_composite => \@tag_accessors]);
 }
 

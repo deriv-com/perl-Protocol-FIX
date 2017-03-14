@@ -171,7 +171,6 @@ sub new {
 sub check {
     my ($self, $value) = @_;
 
-    my $type_checker = $per_type{$self->{type}};
     my $result =
         $self->{values}
         ? (defined($value) && exists $self->{values}->{by_name}->{$value})
@@ -188,7 +187,6 @@ sub has_mapping {
 sub check_raw {
     my ($self, $value) = @_;
 
-    my $type_checker = $per_type{$self->{type}};
     my $result =
         $self->{values}
         ? (defined($value) && exists $self->{values}->{by_id}->{$value})

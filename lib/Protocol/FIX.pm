@@ -124,7 +124,6 @@ sub _construct_components {
     while (my $component_descr = shift @components_queue) {
         my @composites;
         my $name = $component_descr->{-name};
-        my $type = $component_descr->{-type};
 
         my $fatal = 0;
         eval {
