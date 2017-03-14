@@ -164,7 +164,7 @@ sub _parse_body {
 
     my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 1);
     return (undef, $err) if $err;
-    return (new Protocol::FIX::MessageInstance($message, $ta));
+    return (Protocol::FIX::MessageInstance->new($message, $ta));
 }
 
 sub _construct_tag_accessor_component {

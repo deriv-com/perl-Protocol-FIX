@@ -260,6 +260,8 @@ sub _construct_from_definition {
 
     my $messages_lookup = $self->_construct_messages($definition);
     $self->{messages_lookup} = $messages_lookup;
+
+    return;
 }
 
 sub field_by_name {
@@ -332,6 +334,7 @@ sub _merge_lookups {
     for my $k (keys %$new) {
         $old->{$k} = $new->{$k};
     }
+    return;
 }
 
 sub extension {

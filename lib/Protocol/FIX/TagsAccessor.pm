@@ -20,8 +20,7 @@ sub new {
 
 sub value {
     my ($self, $name) = @_;
-    my $value = $self->{$name};
-
+    return $self->{$name};
 }
 
 1;

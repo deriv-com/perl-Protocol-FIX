@@ -19,8 +19,8 @@ sub value {
     return shift->{tags_accessor}->value(shift);
 }
 
-sub name { shift->{name} }
+sub name { return shift->{name} }
 
-sub category { shift->{category} }
+sub category { return shift->{category} }
 
 1;
