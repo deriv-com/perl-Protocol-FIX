@@ -67,7 +67,6 @@ See also the "eg" folder for sample of FIX-server.
 
 =cut
 
-
 my $distribution = 'Protocol-FIX';
 
 my %MANAGED_COMPOSITES = map { $_ => 1 } qw/BeginString BodyLength MsgType CheckSum/;
@@ -76,7 +75,6 @@ my %specificaion_for = (fix44 => 'FIX44.xml');
 
 our $SEPARATOR     = "\x{01}";
 our $TAG_SEPARATOR = "=";
-
 
 =head1 METHODS
 
@@ -118,12 +116,10 @@ This might be usable during development of own FIX-client/server.
 
 =cut
 
-
 sub humanize {
     my $s = shift;
     return $s =~ s/\x{01}/ | /gr;
 }
-
 
 =head3 is_composite($object)
 
@@ -355,7 +351,6 @@ Not for end-user usage.
 
 =cut
 
-
 sub field_by_name {
     my ($self, $field_name) = @_;
     my $field = $self->{fields_lookup}->{by_name}->{$field_name};
@@ -463,7 +458,6 @@ sub managed_composites {
     return \%MANAGED_COMPOSITES;
 }
 
-
 =head3 serialize_message($self, $message_name, $payload)
 
 Returns serialized string for the supplied C<$message_name> and C<$payload>.
@@ -500,7 +494,6 @@ In other cases it dies; that indicates either end-user (developer) error
 or bug in the module.
 
 =cut
-
 
 sub parse_message {
     return Protocol::FIX::Parser::parse(@_);
