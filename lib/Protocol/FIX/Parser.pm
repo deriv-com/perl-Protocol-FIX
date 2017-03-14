@@ -25,14 +25,14 @@ sub _parse_tag_pair {
 
         return ([$field, $value]) unless $check_value;
 
-        return (undef, "Protocol error: value for field '" . $field->{name} . "' does not pass validation in tag pair '"
-            . Protocol::FIX::humanize($pair) . "'")
+        return (undef,
+            "Protocol error: value for field '" . $field->{name} . "' does not pass validation in tag pair '" . Protocol::FIX::humanize($pair) . "'")
             unless $field->check_raw($value);
 
         return ([$field, $value]);
 
     } else {
-        if ($pair =~ /[\D$Protocol::FIX::TAG_SEPARATOR]+/)  {
+        if ($pair =~ /[\D$Protocol::FIX::TAG_SEPARATOR]+/) {
             return (undef, "Protocol error: sequence '" . Protocol::FIX::humanize($pair) . "' does not match tag pair");
         }
         return;
@@ -48,7 +48,7 @@ sub parse {
     die("buffer is not scalar reference") unless ref($buff_ref) eq 'SCALAR';
 
     my $begin_string = $protocol->{begin_string};
-    my $buff_length = length($$buff_ref);
+    my $buff_length  = length($$buff_ref);
 
     # no enough data
     return if $buff_length < length($begin_string);
@@ -76,8 +76,7 @@ sub parse {
 
         my ($field, $value) = @$tag_pair;
         if ($field->{name} ne 'BodyLength') {
-            return (undef, "Protocol error: expected field 'BodyLength', but got '"
-                . $field->{name} . "', in sequence '" . $header_pairs[1] . "'");
+            return (undef, "Protocol error: expected field 'BodyLength', but got '" . $field->{name} . "', in sequence '" . $header_pairs[1] . "'");
         }
         return unless $pair_is_complete;
 
@@ -104,15 +103,18 @@ sub parse {
 
         my ($field, $value) = @$tag_pair;
         if ($field->{name} ne 'CheckSum') {
-            return (undef, "Protocol error: expected field 'CheckSum', but got '"
-                . $field->{name} . "', in sequence '" . $checksum_pair . "'");
+            return (undef, "Protocol error: expected field 'CheckSum', but got '" . $field->{name} . "', in sequence '" . $checksum_pair . "'");
         }
 
         my $is_number = ($value =~ /^\d{3}$/);
 
         if (!$is_number || ($is_number && ($value > 255))) {
-            return (undef, "Protocol error: value for field '" . $field->{name} . "' does not pass validation in tag pair '"
-                        . Protocol::FIX::humanize($checksum_pair) . "'")
+            return (undef,
+                      "Protocol error: value for field '"
+                    . $field->{name}
+                    . "' does not pass validation in tag pair '"
+                    . Protocol::FIX::humanize($checksum_pair)
+                    . "'");
         }
 
         my $header_body = substr($$buff_ref, 0, $consumed_length + $body_length);
@@ -121,8 +123,8 @@ sub parse {
         $sum %= 256;
 
         if ($sum != $value) {
-            return (undef, "Protocol error: Checksum mismatch;  got $sum, expected $value for message '"
-                        . Protocol::FIX::humanize($header_body) . "'");
+            return (undef,
+                "Protocol error: Checksum mismatch;  got $sum, expected $value for message '" . Protocol::FIX::humanize($header_body) . "'");
         }
         $body = substr($$buff_ref, $consumed_length, $body_length);
         $value;
@@ -132,7 +134,7 @@ sub parse {
 
     # checksum surrounded by separators
     my $trailer_length = 1 + length($checksum_pair) + 1;
-    my $total_length = $consumed_length + $body_length + $trailer_length;
+    my $total_length   = $consumed_length + $body_length + $trailer_length;
     $$buff_ref =~ s/.{$total_length}//sm;
     return ($message);
 }
@@ -163,14 +165,14 @@ sub _parse_body {
     my ($ta, $err) = _construct_tag_accessor($protocol, $message, \@tag_pairs, 1);
     return (undef, $err) if $err;
     return (new Protocol::FIX::MessageInstance($message, $ta));
-};
+}
 
 sub _construct_tag_accessor_component {
     my ($protocol, $composite, $tag_pairs) = @_;
     my $field = $tag_pairs->[0]->[0];
 
     my $sub_composite_name = $composite->{field_to_component}->{$field->{name}};
-    my $composite_desc = $composite->{composite_by_name}->{$sub_composite_name};
+    my $composite_desc     = $composite->{composite_by_name}->{$sub_composite_name};
     my ($sub_composite, $required) = @$composite_desc;
     my ($ta, $error) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
     return (undef, $error) if ($error);
@@ -180,17 +182,17 @@ sub _construct_tag_accessor_component {
 sub _construct_tag_accessor_field {
     my ($protocol, $composite, $tag_pairs) = @_;
 
-    my ($field, $value) = @{ shift(@$tag_pairs) };
-    my $humanized_value = $field->has_mapping
+    my ($field, $value) = @{shift(@$tag_pairs)};
+    my $humanized_value =
+          $field->has_mapping
         ? $field->{values}->{by_id}->{$value}
-        : $value
-        ;
+        : $value;
     return ([$field => $humanized_value]);
 }
 
 sub _construct_tag_accessor_group {
     my ($protocol, $composite, $tag_pairs) = @_;
-    my ($field, $value) = @{ shift(@$tag_pairs) };
+    my ($field, $value) = @{shift(@$tag_pairs)};
 
     my $composite_desc = $composite->{composite_by_name}->{$field->{name}};
     my ($sub_composite, $required) = @$composite_desc;
@@ -198,15 +200,18 @@ sub _construct_tag_accessor_group {
     my @tag_accessors;
     for my $idx (1 .. $value) {
         my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
-        return (undef, "Protocol error: cannot construct item #${idx} for ". $composite->{type}
-            . " '" . $composite->{name} . "' (" . $sub_composite->{type} . " '" . $sub_composite->{name} . "')" )
+        return (undef,
+                  "Protocol error: cannot construct item #${idx} for "
+                . $composite->{type} . " '"
+                . $composite->{name} . "' ("
+                . $sub_composite->{type} . " '"
+                . $sub_composite->{name} . "')")
             unless $ta;
         push @tag_accessors, $ta;
     }
-    my $group_accessor = Protocol::FIX::TagsAccessor->new([ $sub_composite => \@tag_accessors]);
+    my $group_accessor = Protocol::FIX::TagsAccessor->new([$sub_composite => \@tag_accessors]);
     return ([$sub_composite => \@tag_accessors]);
 }
-
 
 sub _construct_tag_accessor {
     my ($protocol, $composite, $tag_pairs, $fail_on_missing) = @_;
@@ -227,14 +232,13 @@ sub _construct_tag_accessor {
         # 1. try to construct sub-components (if there are fields pointing to them)
         # 2. otherwise try to construct field group
         # 3. or simple (single) field
-        my $constructor = ($owner && ($owner ne $composite->{name}))
+        my $constructor =
+            ($owner && ($owner ne $composite->{name}))
             ? \&_construct_tag_accessor_component
-            : ($composite->{composite_by_name}->{$field->{name}})
-                ? $field->{type} eq 'NUMINGROUP'
-                    ? \&_construct_tag_accessor_group
-                    : \&_construct_tag_accessor_field
-                : undef
-            ;
+            : ($composite->{composite_by_name}->{$field->{name}}) ? $field->{type} eq 'NUMINGROUP'
+                ? \&_construct_tag_accessor_group
+                : \&_construct_tag_accessor_field
+            : undef;
 
         if ($constructor) {
             my ($ta_descr, $error) = $constructor->($protocol, $composite, $tag_pairs);
@@ -244,16 +248,15 @@ sub _construct_tag_accessor {
             $parsed_subcomposites{$sub_composite->{name}} = 1;
         } else {
             # the error can occur only for top-level message
-            return (undef, "Protocol error: field '" . $field->{name} . "' was not expected in "
-                . $composite->{type} . " '" . $composite->{name} . "'")
+            return (undef,
+                "Protocol error: field '" . $field->{name} . "' was not expected in " . $composite->{type} . " '" . $composite->{name} . "'")
                 if $fail_on_missing;
             last;
         }
     }
-    for my $mandatory_composite (@{ $composite->{mandatory_composites} // [] }) {
-        if (! exists $parsed_subcomposites{$mandatory_composite}) {
-            return (undef, "Protocol error: '$mandatory_composite' is mandatory for "
-                . $composite->{type} . " '" . $composite->{name} . "'");
+    for my $mandatory_composite (@{$composite->{mandatory_composites} // []}) {
+        if (!exists $parsed_subcomposites{$mandatory_composite}) {
+            return (undef, "Protocol error: '$mandatory_composite' is mandatory for " . $composite->{type} . " '" . $composite->{name} . "'");
         }
     }
     return (@direct_pairs ? Protocol::FIX::TagsAccessor->new(\@direct_pairs) : ());

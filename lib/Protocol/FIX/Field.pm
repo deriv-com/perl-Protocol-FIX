@@ -37,24 +37,26 @@ UTCTIMESTAMP
 =cut
 
 # anyting defined and not containing delimiter
-my $BOOLEAN_validator      = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
-my $STRING_validator       = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
-my $INT_validator          = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
-my $LENGTH_validator       = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0};
-my $DATA_validator         = sub { defined($_[0]) && length($_[0]) > 0 };
-my $FLOAT_validator        = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
-my $CHAR_validator         = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/ };
-my $CURRENCY_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]{3}$/ };
-my $COUNTRY_validator      = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/ };
+my $BOOLEAN_validator  = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
+my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
+my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
+my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0 };
+my $DATA_validator     = sub { defined($_[0]) && length($_[0]) > 0 };
+my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
+my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/ };
+my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]{3}$/ };
+my $COUNTRY_validator  = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/ };
 
-my $MONTHYEAR_validator    = sub {
+my $MONTHYEAR_validator = sub {
     my $d = shift;
     # YYYYMM
     # YYYYMMDD
     # YYYYMMWW
-    my $ym_valid = defined($d)
+    my $ym_valid =
+           defined($d)
         && $d =~ /^(\d{4})(\d{2})([w\d]\d)?$/
-        && ($2 >= 1) && ($2 <= 12);
+        && ($2 >= 1)
+        && ($2 <= 12);
 
     return unless $ym_valid;
 
@@ -62,18 +64,19 @@ my $MONTHYEAR_validator    = sub {
     return 1 unless $r;
 
     return ($r =~ /^w[1-6]$/)
-        || (($r =~ /^\d{2}$/) && ($r >= 1) && ($r <= 31))
-        ;
+        || (($r =~ /^\d{2}$/) && ($r >= 1) && ($r <= 31));
 };
 
 my $LOCALMKTDATE_validator = sub {
     my $d = shift;
     # YYYYMMDD
-    return defined($d)
+    return
+           defined($d)
         && $d =~ /^(\d{4})(\d{2})(\d{2})$/
-        && ($2 >= 1) && ($2 <= 12)
-        && ($3 >= 1) && ($3 <= 31)
-        ;
+        && ($2 >= 1)
+        && ($2 <= 12)
+        && ($3 >= 1)
+        && ($3 <= 31);
 };
 
 my $UTCTIMESTAMP_validator = sub {
@@ -81,11 +84,17 @@ my $UTCTIMESTAMP_validator = sub {
     # YYYYMMDD-HH:MM:SS
     # YYYYMMDD-HH:MM:SS.sss
     if (defined($t) && $t =~ /^(\d{4})(\d{2})(\d{2})-(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
-        return ($2 >= 1) && ($2 <= 12)
-            && ($3 >= 1) && ($3 <= 31)
-            && ($4 >= 0) && ($4 <= 23)
-            && ($5 >= 0) && ($5 <= 59)
-            && ($6 >= 0) && ($5 <= 60)
+        return
+               ($2 >= 1)
+            && ($2 <= 12)
+            && ($3 >= 1)
+            && ($3 <= 31)
+            && ($4 >= 0)
+            && ($4 <= 23)
+            && ($5 >= 0)
+            && ($5 <= 59)
+            && ($6 >= 0)
+            && ($5 <= 60)
 
     } else {
         return;
@@ -97,9 +106,13 @@ my $UTCTIMEONLY_validator = sub {
     # HH:MM:SS.sss
     my $t = shift;
     if (defined($t) && $t =~ /^(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
-        return ($1 >= 0) && ($1 <= 23)
-            && ($2 >= 0) && ($2 <= 59)
-            && ($3 >= 0) && ($3 <= 60);
+        return
+               ($1 >= 0)
+            && ($1 <= 23)
+            && ($2 >= 0)
+            && ($2 <= 59)
+            && ($3 >= 0)
+            && ($3 <= 60);
     } else {
         return;
     }
@@ -139,8 +152,8 @@ sub new {
 
     my $obj = {
         number => $number,
-        name => $name,
-        type => $type,
+        name   => $name,
+        type   => $type,
     };
 
     if ($values) {
@@ -153,13 +166,14 @@ sub new {
     }
 
     return bless $obj, $class;
-};
+}
 
 sub check {
     my ($self, $value) = @_;
 
     my $type_checker = $per_type{$self->{type}};
-    my $result = $self->{values}
+    my $result =
+        $self->{values}
         ? (defined($value) && exists $self->{values}->{by_name}->{$value})
         : $per_type{$self->{type}}->($value);
 
@@ -175,27 +189,29 @@ sub check_raw {
     my ($self, $value) = @_;
 
     my $type_checker = $per_type{$self->{type}};
-    my $result = $self->{values}
+    my $result =
+        $self->{values}
         ? (defined($value) && exists $self->{values}->{by_id}->{$value})
         : $per_type{$self->{type}}->($value);
 
     return $result;
 }
 
-
 sub serialize {
     my ($self, $value) = @_;
 
-    my $packed_value =  $self->{values} ? do {
+    my $packed_value = $self->{values}
+        ? do {
         my $id = $self->{values}->{by_name}->{$value};
         die("The value '$value' is not acceptable for field " . $self->{name})
             unless defined $id;
         $id;
-    } : $value;
+        }
+        : $value;
     die("The value '$value' is not acceptable for field " . $self->{name})
         unless $self->check($value);
 
     return $self->{number} . '=' . $packed_value;
-};
+}
 
 1;

@@ -36,7 +36,7 @@ sub serialize {
     die '@repetitions must be non-empty in $obj->serialize($repetitions)'
         if @$repetitions == 0;
 
-    my @strings = ( $self->{base_field}->serialize(scalar @$repetitions) );
+    my @strings = ($self->{base_field}->serialize(scalar @$repetitions));
 
     for my $values (@$repetitions) {
         push @strings, $self->next::method($values);

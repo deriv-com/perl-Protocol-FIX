@@ -26,20 +26,18 @@ sub new {
     my %component_for;
 
     for (my $idx = 0; $idx < @$composites; $idx += 2) {
-        my $c = $composites->[$idx];
+        my $c        = $composites->[$idx];
         my $required = $composites->[$idx + 1];
         die "The object $idx must be a composite"
             unless Protocol::FIX::is_composite($c);
 
         my $prerequisite_composite;
         if ($c->{type} eq 'DATA') {
-            my $valid_definition
-                =  ($idx > 0)
-                && $composites->[$idx-2]->{type} eq 'LENGTH'
-                ;
+            my $valid_definition = ($idx > 0)
+                && $composites->[$idx - 2]->{type} eq 'LENGTH';
             die "The field type 'LENGTH' must appear before field " . $c->{name}
                 unless $valid_definition;
-            $prerequisite_composite = $composites->[$idx-2];
+            $prerequisite_composite = $composites->[$idx - 2];
         }
 
         push @composites, $c, ($required ? 1 : 0);
@@ -50,15 +48,23 @@ sub new {
             my $sub_dependency = $c->{field_to_component};
             for my $k (keys %$sub_dependency) {
                 if (exists $component_for{$k}) {
-                    die("Ambiguity when constructing component '$name': '$k' already points to '"
-                        . $component_for{$k} . "', trying to add another pointer to '" . $sub_dependency->{$k} . "'");
+                    die(      "Ambiguity when constructing component '$name': '$k' already points to '"
+                            . $component_for{$k}
+                            . "', trying to add another pointer to '"
+                            . $sub_dependency->{$k}
+                            . "'");
                 }
                 $component_for{$k} = $sub_dependency->{$k};
             }
         }
         if (exists $component_for{$c->{name}}) {
-            die("Ambiguity when constructing component '$name': '"  . $c->{name} . "' already points to '"
-                . $component_for{$c->{name}} . "', trying to add another pointer to '" . $name . "'");
+            die(      "Ambiguity when constructing component '$name': '"
+                    . $c->{name}
+                    . "' already points to '"
+                    . $component_for{$c->{name}}
+                    . "', trying to add another pointer to '"
+                    . $name
+                    . "'");
         }
         $component_for{$c->{name}} = $name;
 
@@ -86,8 +92,8 @@ sub serialize {
 
     my %used_composites;
     for (my $idx = 0; $idx < @$values; $idx += 2) {
-        my $name = $values->[$idx];
-        my $value = $values->[$idx + 1];
+        my $name   = $values->[$idx];
+        my $value  = $values->[$idx + 1];
         my $c_info = $self->{composite_by_name}->{$name};
         if (!$c_info) {
             die "Composite '$name' is not available for " . $self->{type} . " '" . $self->{name} . "'";
@@ -95,24 +101,22 @@ sub serialize {
 
         my $c = $c_info->[0];
         if ($c->{type} eq 'DATA') {
-            my $c_length = $c_info->[1];
-            my $valid_sequence
-                =  ($idx > 0)
-                && $self->{composite_by_name}->{$values->[$idx-2]}->[0] == $c_length;
-                ;
+            my $c_length       = $c_info->[1];
+            my $valid_sequence = ($idx > 0)
+                && $self->{composite_by_name}->{$values->[$idx - 2]}->[0] == $c_length;
 
             die "The field '" . $c_length->{name} . "' must precede '" . $c->{name} . "'"
                 unless $valid_sequence;
 
             my $actual_length = length($value);
-            die "The length field '" . $c_length->{name} . "' ($actual_length) isn't equal previously declared (" . $values->[$idx-1] . ")"
-                unless $values->[$idx-1] == $actual_length;
+            die "The length field '" . $c_length->{name} . "' ($actual_length) isn't equal previously declared (" . $values->[$idx - 1] . ")"
+                unless $values->[$idx - 1] == $actual_length;
         }
 
         push @strings, $c->serialize($value);
         $used_composites{$name} = 1;
     }
-    for my $mandatory_name (@{ $self->{mandatory_composites} }) {
+    for my $mandatory_name (@{$self->{mandatory_composites}}) {
         die "'$mandatory_name' is mandatory for " . $self->{type} . " '" . $self->{name} . "'"
             unless exists $used_composites{$mandatory_name};
     }

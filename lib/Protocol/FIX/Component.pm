@@ -6,7 +6,6 @@ use warnings;
 use Protocol::FIX;
 use parent qw/Protocol::FIX::BaseComposite/;
 
-
 ## VERSION
 
 sub new {

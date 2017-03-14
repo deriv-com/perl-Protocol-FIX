@@ -14,9 +14,9 @@ sub new {
         my $value = $tag_pairs->[$idx + 1];
         $by_name{$composite->{name}} = $value;
 
-    };
+    }
     return bless \%by_name, $class;
-};
+}
 
 sub value {
     my ($self, $name) = @_;
