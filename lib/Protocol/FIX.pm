@@ -234,7 +234,7 @@ sub _construct_components {
         $eval_result = eval { push @composites, _get_composites($component_descr->{field}, $fields_lookup); 1 };
         if (!$eval_result) {
             # make it human friendly
-            die("Cannot find fild '$@' referred by '$name'");
+            die("Cannot find field '$@' referred by '$name'");
         }
 
         my $component = Protocol::FIX::Component->new($name, \@composites);
@@ -285,7 +285,7 @@ sub _construct_messages {
         };
         if (!$eval_result) {
             # make it human friendly
-            die("Cannot find fild '$@' referred by '$name'");
+            die("Cannot find field '$@' referred by '$name'");
         }
 
         my $group_descr = $message_descr->{group};
