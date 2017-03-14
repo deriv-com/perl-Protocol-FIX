@@ -7,32 +7,37 @@ use Protocol::FIX;
 
 ## VERSION
 
-=x
-Known types:
+=head1 NAME
 
-AMT
-BOOLEAN
-CHAR
-COUNTRY
-CURRENCY
-DATA
-EXCHANGE
-FLOAT
-INT
-LENGTH
-LOCALMKTDATE
-MONTHYEAR
-MULTIPLEVALUESTRING
-NUMINGROUP
-PERCENTAGE
-PRICE
-PRICEOFFSET
-QTY
-SEQNUM
-STRING
-UTCDATEONLY
-UTCTIMEONLY
-UTCTIMESTAMP
+Protocol::FIX::Field - FIX Message Field
+
+=head1 Description
+
+The following field types are known to the class. Validators are provided.
+
+ AMT
+ BOOLEAN
+ CHAR
+ COUNTRY
+ CURRENCY
+ DATA
+ EXCHANGE
+ FLOAT
+ INT
+ LENGTH
+ LOCALMKTDATE
+ MONTHYEAR
+ MULTIPLEVALUESTRING
+ NUMINGROUP
+ PERCENTAGE
+ PRICE
+ PRICEOFFSET
+ QTY
+ SEQNUM
+ STRING
+ UTCDATEONLY
+ UTCTIMEONLY
+ UTCTIMESTAMP
 
 =cut
 
@@ -144,6 +149,14 @@ my %per_type = (
     COUNTRY             => $COUNTRY_validator,
 );
 
+=head1 METHODS
+
+=head3 new($class, $number, $name, $type, $values)
+
+Creates new Field (performed by Protocol, when it parses XML definition)
+
+=cut
+
 sub new {
     my ($class, $number, $name, $type, $values) = @_;
 
@@ -168,6 +181,19 @@ sub new {
     return bless $obj, $class;
 }
 
+=head3 check($self, $value)
+
+Returns C<true > or C<false> if the supplied value conforms type.
+
+If type has enumeration (i.e. "B" for "BID" and "O" for "OFFER"),
+then it expects that human-readable value ("BID" / "OFFER") will be
+provided as C<$value>. The values "B" or "O" will not bypass
+the check.
+
+This method is used during message serialization L<Message/"serialize">.
+
+=cut
+
 sub check {
     my ($self, $value) = @_;
 
@@ -179,10 +205,29 @@ sub check {
     return $result;
 }
 
+=head3 has_mapping($self)
+
+returns true if field has enumeration
+
+=cut
+
 sub has_mapping {
     my $self = shift;
     return exists $self->{values};
 }
+
+=head3 check_raw($self, $value)
+
+Returns C<true > or C<false> if the supplied value conforms type.
+
+If type has enumeration (i.e. "B" for "BID" and "O" for "OFFER"),
+then it expects that enum value ("B" / "O") will be
+provided as C<$value>. The values "BID" or "OFFER" will not bypass
+the check.
+
+This method is used during message deserialization L<FIX/"parse">.
+
+=cut
 
 sub check_raw {
     my ($self, $value) = @_;
@@ -194,6 +239,13 @@ sub check_raw {
 
     return $result;
 }
+
+=head3 serialize($self, $values)
+
+Serializes field value. If the value does not bypasses the type check,
+an exception will be thrown.
+
+=cut
 
 sub serialize {
     my ($self, $value) = @_;
