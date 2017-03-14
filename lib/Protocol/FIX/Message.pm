@@ -89,18 +89,20 @@ added to serialized string automatically.
 sub serialize {
     my ($self, $values) = @_;
 
-    my $body = $self->{serialized}->{message_type} . $Protocol::FIX::SEPARATOR . $self->next::method($values);
+    # the SOH / trailing separator is part of the body, and it is included
+    # in body length and checksum
+    my $body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{message_type}, $self->next::method($values), '');
 
     my $body_length = $self->{managed_composites}->{BodyLength}->serialize(length($body));
 
-    my $header_body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{begin_string}, $body_length, $body,);
+    my $header_body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{begin_string}, $body_length, $body);
 
     my $sum = 0;
     $sum += ord $_ for split //, $header_body;
     $sum %= 256;
     my $checksum = $self->{managed_composites}->{CheckSum}->serialize(sprintf('%03d', $sum));
 
-    return join($Protocol::FIX::SEPARATOR, $header_body, $checksum, '');
+    return $header_body . join($Protocol::FIX::SEPARATOR, $checksum, '');
 }
 
 1;

@@ -99,16 +99,17 @@ sub parse {
 
     return (undef, undef) if $buff_length <= $consumed_length + $body_length;
     # -1 is used to include separator
-    my $trailer = substr($$buff_ref, $consumed_length + $body_length - 1);
+    my $trailer = substr($$buff_ref, $consumed_length + $body_length);
 
     # -1 is included as it is terminator / end of message boundary
     my @trailer_pairs = split $Protocol::FIX::SEPARATOR, $trailer, -1;
 
-    # 3 tags expected: empty - checksum - empty(or may be new message)
-    return if (@trailer_pairs < 3) || !$trailer_pairs[1];
+    # 2 tags expected: checksum - empty(or may be new message)
+    # the trailing SOH is included into BODY
+    return (undef, undef) if (@trailer_pairs < 2) || !$trailer_pairs[0];
     # from here we assume $body_length is valid
 
-    my $checksum_pair = $trailer_pairs[1];
+    my $checksum_pair = $trailer_pairs[0];
     my $body;
     my $checksum = do {
         my ($tag_pair, $err) = _parse_tag_pair($protocol, $checksum_pair, 1);
@@ -146,9 +147,10 @@ sub parse {
     return (undef, $error) if $error;
 
     # checksum surrounded by separators
-    my $trailer_length = 1 + length($checksum_pair) + 1;
+    my $trailer_length = length($checksum_pair) + 1;
     my $total_length   = $consumed_length + $body_length + $trailer_length;
-    $$buff_ref =~ s/.{$total_length}//sm;
+
+    $$buff_ref = substr $$buff_ref, $total_length;
     return ($message, undef);
 }
 
