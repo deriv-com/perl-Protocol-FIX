@@ -64,7 +64,7 @@ sub parse {
     my $buff_length  = length($$buff_ref);
 
     # no enough data
-    return if $buff_length < length($begin_string);
+    return (undef, undef) if $buff_length < length($begin_string);
 
     if (substr($$buff_ref, 0, length($begin_string)) ne $begin_string) {
         return (undef, "Mismatch protocol introduction, expected: $begin_string");
@@ -97,7 +97,7 @@ sub parse {
         $value;
     };
 
-    return if $buff_length <= $consumed_length + $body_length;
+    return (undef, undef) if $buff_length <= $consumed_length + $body_length;
     # -1 is used to include separator
     my $trailer = substr($$buff_ref, $consumed_length + $body_length - 1);
 
@@ -149,7 +149,7 @@ sub parse {
     my $trailer_length = 1 + length($checksum_pair) + 1;
     my $total_length   = $consumed_length + $body_length + $trailer_length;
     $$buff_ref =~ s/.{$total_length}//sm;
-    return ($message);
+    return ($message, undef);
 }
 
 sub _parse_body {
