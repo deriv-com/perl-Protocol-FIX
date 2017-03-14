@@ -8,6 +8,20 @@ use UNIVERSAL;
 
 ## VERSION
 
+=head1 NAME
+
+Protocol::FIX::Group - allows repetition of common fieds/groups/components
+
+=cut
+
+=head1 METHODS
+
+=head3 new($class, $name, $composites)
+
+Creates new Group (performed by Protocol, when it parses XML definition)
+
+=cut
+
 use mro;
 use parent qw/Protocol::FIX::BaseComposite/;
 
@@ -26,6 +40,13 @@ sub new {
 
     return $obj;
 }
+
+=head3 serialize($self, $values)
+
+Serializes array of C<$values>. Not for end-user usage. Please, refer
+L<Message/"serialize">
+
+=cut
 
 sub serialize {
     my ($self, $repetitions) = @_;

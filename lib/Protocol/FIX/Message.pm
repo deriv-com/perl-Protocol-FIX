@@ -24,7 +24,6 @@ Creates new Message (performed by Protocol, when it parses XML definition)
 
 =cut
 
-
 sub new {
     my ($class, $name, $category, $message_type, $composites, $protocol) = @_;
 
@@ -63,7 +62,6 @@ sub new {
 
     return $obj;
 }
-
 
 =head3 serialize($self, $values)
 

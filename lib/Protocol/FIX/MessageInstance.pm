@@ -60,6 +60,7 @@ sub value {
 Returns message name, e.g. C<LogOn>
 
 =cut
+
 sub name { return shift->{name} }
 
 =head3 category($self, $name)
@@ -67,6 +68,7 @@ sub name { return shift->{name} }
 Returns message category, e.g. C<app> or C<admin>
 
 =cut
+
 sub category { return shift->{category} }
 
 1;

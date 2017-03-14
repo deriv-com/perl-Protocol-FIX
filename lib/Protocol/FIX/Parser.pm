@@ -16,7 +16,6 @@ Protocol::FIX::Parser - FIX messages parser
 
 =cut
 
-
 sub _parse_tag_pair {
     my ($protocol, $pair, $check_value) = @_;
     return unless $pair;

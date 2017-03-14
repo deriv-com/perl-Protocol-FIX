@@ -8,6 +8,20 @@ use UNIVERSAL;
 
 ## VERSION
 
+=head1 NAME
+
+Protocol::FIX::BaseComposite - base class for Component, Group and Message
+
+=cut
+
+=head1 METHODS
+
+=head3 new($class, $name, $type, $composites)
+
+Creates new BaseComposite (performed by Protocol, when it parses XML definition)
+
+=cut
+
 sub new {
     my ($class, $name, $type, $composites) = @_;
 
@@ -81,6 +95,14 @@ sub new {
 
     return bless $obj, $class;
 }
+
+=head3 serialize($self, $values)
+
+Serializes array of C<$values>. Not for end-user usage. Please, refer
+L<Message/"serialize">
+
+
+=cut
 
 sub serialize {
     my ($self, $values) = @_;
