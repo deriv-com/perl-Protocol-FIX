@@ -10,6 +10,21 @@ use parent qw/Protocol::FIX::BaseComposite/;
 
 ## VERSION
 
+=head1 NAME
+
+Protocol::FIX::Message - FIX protocol message definition
+
+=cut
+
+=head1 METHODS
+
+=head3 new($class, $name, $category, $message_type, $composites, $protocol)
+
+Creates new Message (performed by Protocol, when it parses XML definition)
+
+=cut
+
+
 sub new {
     my ($class, $name, $category, $message_type, $composites, $protocol) = @_;
 
@@ -49,13 +64,29 @@ sub new {
     return $obj;
 }
 
-sub category {
-    return shift->{category};
-}
 
-sub message_type {
-    return shift->{message_type};
-}
+=head3 serialize($self, $values)
+
+Serializes provided values into string.
+
+    $message->serialize([
+        field => 'value',
+        component => [
+            other_field => 'value-2',
+            group_field => [
+                [some_field_1 => 'value-3.1.1', some_field_1 => 'value-3.1.2'],
+                [some_field_1 => 'value-3.2.1', some_field_1 => 'value-3.2.2'],
+            ],
+        ],
+    ]);
+
+Error will be thrown if values do not conform the specification (e.g.
+string provided, while integer is expected).
+
+The B<managed fields> (BeginString, MsgType, and CheckSum) are calculated and
+added to serialized string automatically.
+
+=cut
 
 sub serialize {
     my ($self, $values) = @_;
