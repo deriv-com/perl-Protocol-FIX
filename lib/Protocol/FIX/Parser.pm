@@ -10,6 +10,13 @@ use Protocol::FIX::MessageInstance;
 
 ## VERSION
 
+=head1 NAME
+
+Protocol::FIX::Parser - FIX messages parser
+
+=cut
+
+
 sub _parse_tag_pair {
     my ($protocol, $pair, $check_value) = @_;
     return unless $pair;
@@ -38,6 +45,13 @@ sub _parse_tag_pair {
         return;
     }
 }
+
+=head3 parse($protocol, $buff_ref)
+
+Tries to parse FIX message in the buffer refernce. Not for end-user usage;
+please refer to L<Protocol/"parse">.
+
+=cut
 
 sub parse {
     my ($protocol, $buff_ref) = @_;
