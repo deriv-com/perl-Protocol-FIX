@@ -70,7 +70,7 @@ my $distribution = 'Protocol-FIX';
 
 my %MANAGED_COMPOSITES = map { $_ => 1 } qw/BeginString BodyLength MsgType CheckSum/;
 
-my %specificaion_for = (fix44 => 'FIX44.xml');
+my %specification_for = (fix44 => 'FIX44.xml');
 
 our $SEPARATOR     = "\x{01}";
 our $TAG_SEPARATOR = "=";
@@ -91,8 +91,8 @@ sub new {
     die("FIX protocol version should be specified")
         unless $version;
 
-    my $file = $specificaion_for{lc $version};
-    die("Unsupported FIX protocol version: $version. Supported versions are: " . join(", ", sort { $a cmp $b } keys %specificaion_for))
+    my $file = $specification_for{lc $version};
+    die("Unsupported FIX protocol version: $version. Supported versions are: " . join(", ", sort { $a cmp $b } keys %specification_for))
         unless $file;
 
     my $dir                 = $ENV{PROTOCOL_FIX_SHARE_DIR} // dist_dir($distribution);
