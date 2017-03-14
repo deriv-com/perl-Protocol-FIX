@@ -316,7 +316,7 @@ sub _construct_messages {
 sub _construct_from_definition {
     my ($self, $definition) = @_;
 
-    my ($type, $major, $minor) = map { $definition->{fix}->{$_} } qw/-type -major -minor/;
+    my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
     my $protocol_id = join('.', $type, $major, $minor);
 
     my $fields_lookup = $self->_construct_fields($definition);
@@ -500,12 +500,7 @@ sub parse_message {
 
 sub _merge_lookups {
     my ($old, $new) = @_;
-
-    return unless $new;
-
-    for my $k (keys %$new) {
-        $old->{$k} = $new->{$k};
-    }
+    @{$old}{keys %$new} = values %$new;
     return;
 }
 
@@ -541,7 +536,7 @@ sub extension {
     my $xml        = path($extension_path)->slurp;
     my $definition = xml2hash $xml;
 
-    my ($type, $major, $minor) = map { $definition->{fix}->{$_} } qw/-type -major -minor/;
+    my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
     my $extension_id = join('.', $type, $major, $minor);
     my $protocol_id = $self->{id};
     die("Extension ID ($extension_id) does not match Protocol ID ($protocol_id)")
