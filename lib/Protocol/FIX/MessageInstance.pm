@@ -3,6 +3,8 @@ package Protocol::FIX::MessageInstance;
 use strict;
 use warnings;
 
+## VERSION
+
 sub new {
     my ($class, $message, $tags_accessor) = @_;
     my $obj = {

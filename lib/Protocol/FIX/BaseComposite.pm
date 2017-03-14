@@ -6,6 +6,8 @@ use warnings;
 use Protocol::FIX;
 use UNIVERSAL;
 
+## VERSION
+
 sub new {
     my ($class, $name, $type, $composites) = @_;
 

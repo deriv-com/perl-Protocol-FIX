@@ -6,6 +6,8 @@ use warnings;
 use Protocol::FIX;
 use UNIVERSAL;
 
+## VERSION
+
 use mro;
 use parent qw/Protocol::FIX::BaseComposite/;
 

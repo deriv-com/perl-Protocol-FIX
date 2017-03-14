@@ -5,6 +5,8 @@ use warnings;
 
 use Protocol::FIX;
 
+## VERSION
+
 =x
 Known types:
 

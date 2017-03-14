@@ -8,6 +8,8 @@ use Protocol::FIX;
 use mro;
 use parent qw/Protocol::FIX::BaseComposite/;
 
+## VERSION
+
 sub new {
     my ($class, $name, $category, $message_type, $composites, $protocol) = @_;
 

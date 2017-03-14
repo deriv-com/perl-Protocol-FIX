@@ -1,4 +1,5 @@
 package Protocol::FIX;
+# ABSTRACT: Financial Information eXchange (FIX) parser/serializer
 
 use strict;
 use warnings;
@@ -17,6 +18,7 @@ use Protocol::FIX::Parser;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
+our $VERSION = '0.01';
 
 my $distribution = 'Protocol-FIX';
 

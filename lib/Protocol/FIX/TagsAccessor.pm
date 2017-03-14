@@ -3,6 +3,8 @@ package Protocol::FIX::TagsAccessor;
 use strict;
 use warnings;
 
+## VERSION
+
 sub new {
     my ($class, $tag_pairs) = @_;
     my %by_name;
