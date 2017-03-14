@@ -7,7 +7,6 @@ use warnings;
 use XML::Fast;
 use File::ShareDir qw/dist_dir/;
 use Path::Tiny;
-use UNIVERSAL;
 
 use Protocol::FIX::Component;
 use Protocol::FIX::Field;

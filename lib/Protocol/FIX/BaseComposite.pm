@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Protocol::FIX;
-use UNIVERSAL;
 
 ## VERSION
 
