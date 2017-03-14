@@ -125,8 +125,8 @@ sub _construct_components {
         my @composites;
         my $name = $component_descr->{-name};
 
-        my $fatal = 0;
-        eval {
+        my $fatal       = 0;
+        my $eval_result = eval {
             push @composites, _get_composites($component_descr->{component}, $components_lookup);
 
             my $group_descr = $component_descr->{group};
@@ -149,18 +149,20 @@ sub _construct_components {
                 my $group_required = $group_descr->{-required} eq 'Y';
                 push @composites, $group => $group_required;
             }
+            1;
         };
-        if ($@) {
+        if (!$eval_result) {
             die("$@") if ($fatal);
             # not constructed yet, postpone current component construction
             push @components_queue, $component_descr;
             next OUTER;
         }
 
-        eval { push @composites, _get_composites($component_descr->{field}, $fields_lookup) };
-        # make it human friendly
-        die("Cannot find fild '$@' referred by '$name'")
-            if ($@);
+        $eval_result = eval { push @composites, _get_composites($component_descr->{field}, $fields_lookup); 1 };
+        if (!$eval_result) {
+            # make it human friendly
+            die("Cannot find fild '$@' referred by '$name'");
+        }
 
         my $component = Protocol::FIX::Component->new($name, \@composites);
         $components_lookup->{by_name}->{$name} = $component;
@@ -173,11 +175,12 @@ sub _construct_composite {
     my ($self, $name, $descr, $fields_lookup, $components_lookup) = @_;
 
     my @composites;
-    eval {
+    my $eval_result = eval {
         push @composites, _get_composites($descr->{field},     $fields_lookup);
         push @composites, _get_composites($descr->{component}, $components_lookup);
+        1;
     };
-    if ($@) {
+    if (!$eval_result) {
         die("Cannot find composite '$@', referred in '$name'");
     }
 
@@ -202,13 +205,15 @@ sub _construct_messages {
         my @composites;
         my ($name, $category, $message_type) = map { $message_descr->{$_} } qw/-name -msgcat -msgtype/;
 
-        eval {
+        my $eval_result = eval {
             push @composites, _get_composites($message_descr->{field},     $fields_lookup);
             push @composites, _get_composites($message_descr->{component}, $components_lookup);
+            1;
         };
-        # make it human friendly
-        die("Cannot find fild '$@' referred by '$name'")
-            if ($@);
+        if (!$eval_result) {
+            # make it human friendly
+            die("Cannot find fild '$@' referred by '$name'");
+        }
 
         my $group_descr = $message_descr->{group};
         # no need to protect with eval, as all fields/components should be availble.
