@@ -50,9 +50,6 @@ my $send_quotes;
 
 my $send_message = sub {
     my ($client, $message) = @_;
-    # I don't know why panda/panda listener do not accept separator at the end of logon message.
-    # WTF? http://fixwiki.org/fixwiki/FPL:Tag_Value_Syntax#Field_Delimiter
-    chop $message;
     print("=> ", $client->{id}, " : ", ($message =~ s/\x{01}/|/gr), "\n");
     $client->{stream}->write($message);
 };
