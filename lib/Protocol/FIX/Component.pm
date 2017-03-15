@@ -17,7 +17,9 @@ Protocol::FIX::Component - aggregates fields, groups, components under single na
 
 =head1 METHODS
 
-=head3 new($class, $name, $composites)
+=head3 new
+
+    new($class, $name, $composites)
 
 Creates new Component (performed by Protocol, when it parses XML definition)
 

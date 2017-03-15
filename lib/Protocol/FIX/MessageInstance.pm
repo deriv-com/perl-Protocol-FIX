@@ -13,7 +13,9 @@ Protocol::FIX::MessageInstance - handy accessor for deserialized FIX message
 
 =head1 METHODS
 
-=head3 new($class, $message, $tags_accessor)
+=head3 new
+
+    new($class, $message, $tags_accessor)
 
 Creates new Message Instance (performed by Parser)
 
@@ -29,7 +31,9 @@ sub new {
     return bless $obj, $class;
 }
 
-=head3 value($self, $name)
+=head3 value
+
+    value($self, $name)
 
 Tiny wrapper of tag-accessors for direcly accessed message fileds.
 
@@ -55,7 +59,9 @@ sub value {
     return shift->{tags_accessor}->value(shift);
 }
 
-=head3 name($self, $name)
+=head3 name
+
+    name($self, $name)
 
 Returns message name, e.g. C<LogOn>
 
@@ -63,7 +69,9 @@ Returns message name, e.g. C<LogOn>
 
 sub name { return shift->{name} }
 
-=head3 category($self, $name)
+=head3 category
+
+    category($self, $name)
 
 Returns message category, e.g. C<app> or C<admin>
 

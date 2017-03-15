@@ -151,7 +151,9 @@ my %per_type = (
 
 =head1 METHODS
 
-=head3 new($class, $number, $name, $type, $values)
+=head3 new
+
+    new($class, $number, $name, $type, $values)
 
 Creates new Field (performed by Protocol, when it parses XML definition)
 
@@ -181,7 +183,9 @@ sub new {
     return bless $obj, $class;
 }
 
-=head3 check($self, $value)
+=head3 check
+
+    check($self, $value)
 
 Returns C<true > or C<false> if the supplied value conforms type.
 
@@ -205,7 +209,9 @@ sub check {
     return $result;
 }
 
-=head3 has_mapping($self)
+=head3 has_mapping
+
+    has_mapping($self)
 
 returns true if field has enumeration
 
@@ -216,7 +222,9 @@ sub has_mapping {
     return exists $self->{values};
 }
 
-=head3 check_raw($self, $value)
+=head3 check_raw
+
+    check_raw($self, $value)
 
 Returns C<true > or C<false> if the supplied value conforms type.
 
@@ -240,7 +248,9 @@ sub check_raw {
     return $result;
 }
 
-=head3 serialize($self, $values)
+=head3 serialize
+
+    serialize($self, $values)
 
 Serializes field value. If the value does not bypasses the type check,
 an exception will be thrown.

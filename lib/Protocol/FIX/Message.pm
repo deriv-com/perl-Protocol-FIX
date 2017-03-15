@@ -18,7 +18,9 @@ Protocol::FIX::Message - FIX protocol message definition
 
 =head1 METHODS
 
-=head3 new($class, $name, $category, $message_type, $composites, $protocol)
+=head3 new
+
+    new($class, $name, $category, $message_type, $composites, $protocol)
 
 Creates new Message (performed by Protocol, when it parses XML definition)
 
@@ -63,7 +65,9 @@ sub new {
     return $obj;
 }
 
-=head3 serialize($self, $values)
+=head3 serialize
+
+    serialize($self, $values)
 
 Serializes provided values into string.
 

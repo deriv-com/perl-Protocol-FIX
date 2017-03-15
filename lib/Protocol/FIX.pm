@@ -77,7 +77,9 @@ our $TAG_SEPARATOR = "=";
 
 =head1 METHODS
 
-=head3 new($class, $version)
+=head3 new
+
+    new($class, $version)
 
 Creates new protocol instance for the specified FIX protocol version. Currently
 shipped version is 'FIX44'.
@@ -106,7 +108,9 @@ sub new {
     return $obj;
 }
 
-=head3 humanize ($buffer)
+=head3 humanize
+
+    humanize ($buffer)
 
 Returns human-readable string for the buffer. I.e. is just substitutes
 L<SOH|https://en.wikipedia.org/wiki/C0_and_C1_control_codes> to " | ".
@@ -120,7 +124,9 @@ sub humanize {
     return $s =~ s/\x{01}/ | /gr;
 }
 
-=head3 is_composite($object)
+=head3 is_composite
+
+    is_composite($object)
 
 Checks whether the supplied C<$object> conforms "composte" concept.
 I.e. is it is L<Field>, L<LGroup>, L<Component> or L<Mesassage>.
@@ -342,7 +348,9 @@ sub _construct_from_definition {
     return;
 }
 
-=head3 field_by_name($self, $field_name)
+=head3 field_by_name
+
+    field_by_name($self, $field_name)
 
 Returns Field object by it's name or dies with error.
 
@@ -359,7 +367,9 @@ sub field_by_name {
     return $field;
 }
 
-=head3 field_by_number($self, $field_number)
+=head3 field_by_number
+
+    field_by_number($self, $field_number)
 
 Returns Field object by it's number or dies with error.
 
@@ -376,7 +386,9 @@ sub field_by_number {
     return $field;
 }
 
-=head3 component_by_name($self, $name)
+=head3 component_by_name
+
+    component_by_name($self, $name)
 
 Returns Component object by it's name or dies with error.
 
@@ -393,7 +405,9 @@ sub component_by_name {
     return $component;
 }
 
-=head3 message_by_name($self, $name)
+=head3 message_by_name
+
+    message_by_name($self, $name)
 
 Returns Message object by it's name or dies with error.
 
@@ -408,7 +422,9 @@ sub message_by_name {
     return $message;
 }
 
-=head3 header($self)
+=head3 header
+
+    header($self)
 
 Returns Message's header
 
@@ -420,7 +436,9 @@ sub header {
     return shift->{header};
 }
 
-=head3 trailer($self)
+=head3 trailer
+
+    trailer($self)
 
 Returns Message's trailer
 
@@ -432,7 +450,9 @@ sub trailer {
     return shift->{trailer};
 }
 
-=head3 id($self)
+=head3 id
+
+    id($self)
 
 Returns Protocol's ID string, as it appears in FIX message (BeginString field).
 
@@ -444,7 +464,9 @@ sub id {
     return shift->{id};
 }
 
-=head3 managed_composites()
+=head3 managed_composites
+
+    managed_composites()
 
 Returns list of fields, managed by protocol. Currently the list consists of
 fields: BeginString, MsgType, and CheckSum
@@ -457,7 +479,9 @@ sub managed_composites {
     return \%MANAGED_COMPOSITES;
 }
 
-=head3 serialize_message($self, $message_name, $payload)
+=head3 serialize_message
+
+    serialize_message($self, $message_name, $payload)
 
 Returns serialized string for the supplied C<$message_name> and C<$payload>.
 Dies in case of end-user (developer) error, e.g. if mandatory field is
@@ -471,7 +495,9 @@ sub serialize_message {
     return $message->serialize($payload);
 }
 
-=head3 parse_message($self, $buff_ref)
+=head3 parse_message
+
+    parse_message($self, $buff_ref)
 
     my ($message_instance, $error) = $protocol->parse($buff_ref);
 
@@ -504,7 +530,9 @@ sub _merge_lookups {
     return;
 }
 
-=head3 extension($self, $extension_path)
+=head3 extension
+
+    extension($self, $extension_path)
 
 Modifies the protocol, by loading XML extension.
 

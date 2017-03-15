@@ -45,7 +45,9 @@ sub _parse_tag_pair {
     }
 }
 
-=head3 parse($protocol, $buff_ref)
+=head3 parse
+
+    parse($protocol, $buff_ref)
 
 Tries to parse FIX message in the buffer refernce. Not for end-user usage;
 please refer to L<Protocol/"parse_message">.

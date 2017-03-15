@@ -15,7 +15,9 @@ Protocol::FIX::BaseComposite - base class for Component, Group and Message
 
 =head1 METHODS
 
-=head3 new($class, $name, $type, $composites)
+=head3 new
+
+    new($class, $name, $type, $composites)
 
 Creates new BaseComposite (performed by Protocol, when it parses XML definition)
 
@@ -95,11 +97,12 @@ sub new {
     return bless $obj, $class;
 }
 
-=head3 serialize($self, $values)
+=head3 serialize
+
+    serialize($self, $values)
 
 Serializes array of C<$values>. Not for end-user usage. Please, refer
 L<Message/"serialize">
-
 
 =cut
 

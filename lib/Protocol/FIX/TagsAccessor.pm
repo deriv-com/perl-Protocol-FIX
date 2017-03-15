@@ -13,7 +13,9 @@ Protocol::FIX::TagsAccessor - access to tags of deserialized FIX messages
 
 =head1 METHODS
 
-=head3 new($class, $tag_pairs)
+=head3 new
+
+    new($class, $tag_pairs)
 
 Creates new TagsAccessor (performed by Parser). Not for direct usage
 by end-users.
@@ -33,7 +35,9 @@ sub new {
     return bless \%by_name, $class;
 }
 
-=head3 value($self, $name)
+=head3 value
+
+    value($self, $name)
 
 Returns value. Please, refer to L<MessageInstance/"value">
 
