@@ -18,6 +18,52 @@ Protocol::FIX::Message - FIX protocol message definition
 
 =head1 METHODS
 
+=head3 serialize
+
+    serialize($self, $values)
+
+Serializes provided values into string.
+
+    $message->serialize([
+        field => 'value',
+        component => [
+            other_field => 'value-2',
+            group_field => [
+                [some_field_1 => 'value-3.1.1', some_field_1 => 'value-3.1.2'],
+                [some_field_1 => 'value-3.2.1', some_field_1 => 'value-3.2.2'],
+            ],
+        ],
+    ]);
+
+Error will be thrown if values do not conform the specification (e.g.
+string provided, while integer is expected).
+
+The B<managed fields> (BeginString, MsgType, and CheckSum) are calculated and
+added to serialized string automatically.
+
+=cut
+
+sub serialize {
+    my ($self, $values) = @_;
+
+    # the SOH / trailing separator is part of the body, and it is included
+    # in body length and checksum
+    my $body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{message_type}, $self->next::method($values), '');
+
+    my $body_length = $self->{managed_composites}->{BodyLength}->serialize(length($body));
+
+    my $header_body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{begin_string}, $body_length, $body);
+
+    my $sum = 0;
+    $sum += ord $_ for split //, $header_body;
+    $sum %= 256;
+    my $checksum = $self->{managed_composites}->{CheckSum}->serialize(sprintf('%03d', $sum));
+
+    return $header_body . join($Protocol::FIX::SEPARATOR, $checksum, '');
+}
+
+=head1 METHODS (for protocol developers)
+
 =head3 new
 
     new($class, $name, $category, $message_type, $composites, $protocol)
@@ -63,50 +109,6 @@ sub new {
     };
 
     return $obj;
-}
-
-=head3 serialize
-
-    serialize($self, $values)
-
-Serializes provided values into string.
-
-    $message->serialize([
-        field => 'value',
-        component => [
-            other_field => 'value-2',
-            group_field => [
-                [some_field_1 => 'value-3.1.1', some_field_1 => 'value-3.1.2'],
-                [some_field_1 => 'value-3.2.1', some_field_1 => 'value-3.2.2'],
-            ],
-        ],
-    ]);
-
-Error will be thrown if values do not conform the specification (e.g.
-string provided, while integer is expected).
-
-The B<managed fields> (BeginString, MsgType, and CheckSum) are calculated and
-added to serialized string automatically.
-
-=cut
-
-sub serialize {
-    my ($self, $values) = @_;
-
-    # the SOH / trailing separator is part of the body, and it is included
-    # in body length and checksum
-    my $body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{message_type}, $self->next::method($values), '');
-
-    my $body_length = $self->{managed_composites}->{BodyLength}->serialize(length($body));
-
-    my $header_body = join($Protocol::FIX::SEPARATOR, $self->{serialized}->{begin_string}, $body_length, $body);
-
-    my $sum = 0;
-    $sum += ord $_ for split //, $header_body;
-    $sum %= 256;
-    my $checksum = $self->{managed_composites}->{CheckSum}->serialize(sprintf('%03d', $sum));
-
-    return $header_body . join($Protocol::FIX::SEPARATOR, $checksum, '');
 }
 
 1;

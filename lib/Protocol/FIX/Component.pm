@@ -15,7 +15,7 @@ Protocol::FIX::Component - aggregates fields, groups, components under single na
 
 =cut
 
-=head1 METHODS
+=head1 METHODS (for protocol developers)
 
 =head3 new
 

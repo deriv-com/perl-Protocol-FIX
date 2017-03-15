@@ -13,7 +13,7 @@ Protocol::FIX::Group - allows repetition of common fieds/groups/components
 
 =cut
 
-=head1 METHODS
+=head1 METHODS (for protocol developers)
 
 =head3 new
 

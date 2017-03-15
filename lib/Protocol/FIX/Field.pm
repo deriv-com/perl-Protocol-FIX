@@ -149,7 +149,7 @@ my %per_type = (
     COUNTRY             => $COUNTRY_validator,
 );
 
-=head1 METHODS
+=head1 METHODS (for protocol developers)
 
 =head3 new
 

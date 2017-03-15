@@ -13,7 +13,7 @@ Protocol::FIX::BaseComposite - base class for Component, Group and Message
 
 =cut
 
-=head1 METHODS
+=head1 METHODS (for protocol developers)
 
 =head3 new
 

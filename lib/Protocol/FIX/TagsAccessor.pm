@@ -39,7 +39,7 @@ sub new {
 
     value($self, $name)
 
-Returns value. Please, refer to L<MessageInstance/"value">
+Returns value. Please, refer to L<MessageInstance/value>
 
 =cut
 

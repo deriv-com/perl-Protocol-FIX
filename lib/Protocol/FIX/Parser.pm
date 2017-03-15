@@ -45,6 +45,8 @@ sub _parse_tag_pair {
     }
 }
 
+=head1 METHODS (for protocol developers)
+
 =head3 parse
 
     parse($protocol, $buff_ref)

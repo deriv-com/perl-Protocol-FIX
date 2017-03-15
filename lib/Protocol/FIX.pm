@@ -108,40 +108,99 @@ sub new {
     return $obj;
 }
 
-=head3 humanize
+=head3 extension
 
-    humanize ($buffer)
+    extension($self, $extension_path)
 
-Returns human-readable string for the buffer. I.e. is just substitutes
-L<SOH|https://en.wikipedia.org/wiki/C0_and_C1_control_codes> to " | ".
+Modifies the protocol, by loading XML extension.
 
-This might be usable during development of own FIX-client/server.
+The extension might contain additional B<messages> or B<fields>.  The
+extenation XML should conform the format as the protocol definition itself,
+i.e.:
+
+    <fix type='FIX' major='4' minor='4' servicepack='0'>
+            <messages>
+                    <message name='Logon' msgtype='A' msgcat='admin'>
+                            <field name='EncryptMethod' required='Y' />
+                            <field name='HeartBtInt' required='Y' />
+                            <field name='ResetSeqNumFlag' required='N' />
+                            <field name='Username' required='N' />
+                            <field name='Password' required='N' />
+                            <field name='AwesomeField' required='Y' />
+                    </message>
+            </messages>
+            <fields>
+                    <field number='33000' name='AwesomeField' type='STRING' />
+            </fields>
+    </fix>
 
 =cut
 
-sub humanize {
-    my $s = shift;
-    return $s =~ s/\x{01}/ | /gr;
+sub extension {
+    my ($self, $extension_path) = @_;
+
+    my $xml        = path($extension_path)->slurp;
+    my $definition = xml2hash $xml;
+
+    my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
+    my $extension_id = join('.', $type, $major, $minor);
+    my $protocol_id = $self->{id};
+    die("Extension ID ($extension_id) does not match Protocol ID ($protocol_id)")
+        unless $extension_id eq $protocol_id;
+
+    my $new_fields_lookup = $self->_construct_fields($definition);
+    _merge_lookups($self->{fields_lookup}->{by_name},   $new_fields_lookup->{by_name});
+    _merge_lookups($self->{fields_lookup}->{by_number}, $new_fields_lookup->{by_number});
+
+    my $new_messsages_lookup = $self->_construct_messages($definition);
+    _merge_lookups($self->{messages_lookup}->{by_name}, $new_messsages_lookup->{by_name});
+
+    return $self;
 }
 
-=head3 is_composite
+=head3 serialize_message
 
-    is_composite($object)
+    serialize_message($self, $message_name, $payload)
 
-Checks whether the supplied C<$object> conforms "composte" concept.
-I.e. is it is L<Field>, L<LGroup>, L<Component> or L<Mesassage>.
-
-Not for end-user usage.
+Returns serialized string for the supplied C<$message_name> and C<$payload>.
+Dies in case of end-user (developer) error, e.g. if mandatory field is
+absent.
 
 =cut
 
-sub is_composite {
-    my $obj = shift;
-    return
-           defined($obj)
-        && UNIVERSAL::can($obj, 'serialize')
-        && exists $obj->{name}
-        && exists $obj->{type};
+sub serialize_message {
+    my ($self, $message_name, $payload) = @_;
+    my $message = $self->message_by_name($message_name);
+    return $message->serialize($payload);
+}
+
+=head3 parse_message
+
+    parse_message($self, $buff_ref)
+
+    my ($message_instance, $error) = $protocol->parse($buff_ref);
+
+Tries to parse FIX message in the buffer refernce.
+
+In the case of success it returns C<MessageInstance> and C<$error> is undef.
+The string in C<$buff_ref> will be consumed.
+
+In the case of B<protocol error>, the C<$message_instance> will be undef,
+and C<$error> will contain the error description. The string in C<$buff_ref>
+will be kept untouched.
+
+In the case, when there is no enough data in C<$buff_ref> both C<$error>
+and C<$message_instance> will be undef. The string in C<$buff_ref>
+will be kept untouched, i.e. waiting futher accumulation of bytes from
+network.
+
+In other cases it dies; that indicates either end-user (developer) error
+or bug in the module.
+
+=cut
+
+sub parse_message {
+    return Protocol::FIX::Parser::parse(@_);
 }
 
 sub _construct_fields {
@@ -348,13 +407,53 @@ sub _construct_from_definition {
     return;
 }
 
+sub _merge_lookups {
+    my ($old, $new) = @_;
+    @{$old}{keys %$new} = values %$new;
+    return;
+}
+
+=head1 METHODS (for protocol developers)
+
+=head3 humanize
+
+    humanize ($buffer)
+
+Returns human-readable string for the buffer. I.e. is just substitutes
+L<SOH|https://en.wikipedia.org/wiki/C0_and_C1_control_codes> to " | ".
+
+This might be usable during development of own FIX-client/server.
+
+=cut
+
+sub humanize {
+    my $s = shift;
+    return $s =~ s/\x{01}/ | /gr;
+}
+
+=head3 is_composite
+
+    is_composite($object)
+
+Checks whether the supplied C<$object> conforms "composte" concept.
+I.e. is it is L<Field>, L<LGroup>, L<Component> or L<Mesassage>.
+
+=cut
+
+sub is_composite {
+    my $obj = shift;
+    return
+           defined($obj)
+        && UNIVERSAL::can($obj, 'serialize')
+        && exists $obj->{name}
+        && exists $obj->{type};
+}
+
 =head3 field_by_name
 
     field_by_name($self, $field_name)
 
 Returns Field object by it's name or dies with error.
-
-Not for end-user usage.
 
 =cut
 
@@ -373,8 +472,6 @@ sub field_by_name {
 
 Returns Field object by it's number or dies with error.
 
-Not for end-user usage.
-
 =cut
 
 sub field_by_number {
@@ -391,8 +488,6 @@ sub field_by_number {
     component_by_name($self, $name)
 
 Returns Component object by it's name or dies with error.
-
-Not for end-user usage.
 
 =cut
 
@@ -428,8 +523,6 @@ sub message_by_name {
 
 Returns Message's header
 
-Not for end-user usage.
-
 =cut
 
 sub header {
@@ -442,8 +535,6 @@ sub header {
 
 Returns Message's trailer
 
-Not for end-user usage.
-
 =cut
 
 sub trailer {
@@ -455,8 +546,6 @@ sub trailer {
     id($self)
 
 Returns Protocol's ID string, as it appears in FIX message (BeginString field).
-
-Not for end-user usage.
 
 =cut
 
@@ -471,113 +560,10 @@ sub id {
 Returns list of fields, managed by protocol. Currently the list consists of
 fields: BeginString, MsgType, and CheckSum
 
-Not for end-user usage.
-
 =cut
 
 sub managed_composites {
     return \%MANAGED_COMPOSITES;
-}
-
-=head3 serialize_message
-
-    serialize_message($self, $message_name, $payload)
-
-Returns serialized string for the supplied C<$message_name> and C<$payload>.
-Dies in case of end-user (developer) error, e.g. if mandatory field is
-absent.
-
-=cut
-
-sub serialize_message {
-    my ($self, $message_name, $payload) = @_;
-    my $message = $self->message_by_name($message_name);
-    return $message->serialize($payload);
-}
-
-=head3 parse_message
-
-    parse_message($self, $buff_ref)
-
-    my ($message_instance, $error) = $protocol->parse($buff_ref);
-
-Tries to parse FIX message in the buffer refernce.
-
-In the case of success it returns C<MessageInstance> and C<$error> is undef.
-The string in C<$buff_ref> will be consumed.
-
-In the case of B<protocol error>, the C<$message_instance> will be undef,
-and C<$error> will contain the error description. The string in C<$buff_ref>
-will be kept untouched.
-
-In the case, when there is no enough data in C<$buff_ref> both C<$error>
-and C<$message_instance> will be undef. The string in C<$buff_ref>
-will be kept untouched, i.e. waiting futher accumulation of bytes from
-network.
-
-In other cases it dies; that indicates either end-user (developer) error
-or bug in the module.
-
-=cut
-
-sub parse_message {
-    return Protocol::FIX::Parser::parse(@_);
-}
-
-sub _merge_lookups {
-    my ($old, $new) = @_;
-    @{$old}{keys %$new} = values %$new;
-    return;
-}
-
-=head3 extension
-
-    extension($self, $extension_path)
-
-Modifies the protocol, by loading XML extension.
-
-The extension might contain additional B<messages> or B<fields>.  The
-extenation XML should conform the format as the protocol definition itself,
-i.e.:
-
-    <fix type='FIX' major='4' minor='4' servicepack='0'>
-            <messages>
-                    <message name='Logon' msgtype='A' msgcat='admin'>
-                            <field name='EncryptMethod' required='Y' />
-                            <field name='HeartBtInt' required='Y' />
-                            <field name='ResetSeqNumFlag' required='N' />
-                            <field name='Username' required='N' />
-                            <field name='Password' required='N' />
-                            <field name='AwesomeField' required='Y' />
-                    </message>
-            </messages>
-            <fields>
-                    <field number='33000' name='AwesomeField' type='STRING' />
-            </fields>
-    </fix>
-
-=cut
-
-sub extension {
-    my ($self, $extension_path) = @_;
-
-    my $xml        = path($extension_path)->slurp;
-    my $definition = xml2hash $xml;
-
-    my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
-    my $extension_id = join('.', $type, $major, $minor);
-    my $protocol_id = $self->{id};
-    die("Extension ID ($extension_id) does not match Protocol ID ($protocol_id)")
-        unless $extension_id eq $protocol_id;
-
-    my $new_fields_lookup = $self->_construct_fields($definition);
-    _merge_lookups($self->{fields_lookup}->{by_name},   $new_fields_lookup->{by_name});
-    _merge_lookups($self->{fields_lookup}->{by_number}, $new_fields_lookup->{by_number});
-
-    my $new_messsages_lookup = $self->_construct_messages($definition);
-    _merge_lookups($self->{messages_lookup}->{by_name}, $new_messsages_lookup->{by_name});
-
-    return $self;
 }
 
 1;
