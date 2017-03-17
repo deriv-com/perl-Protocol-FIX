@@ -1,5 +1,5 @@
 package Protocol::FIX;
-# ABSTRACT: Financial Information eXchange (FIX) parser/serializer
+# ABSTRACT: Financial Information eXchange (FIX) messages parser/serializer
 
 use strict;
 use warnings;
@@ -17,7 +17,11 @@ use Protocol::FIX::Parser;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
-our $VERSION   = '0.01';
+our $VERSION   = '0.02';
+
+=head1 NAME
+
+Protocol::FIX - Financial Information eXchange (FIX) messages parser/serializer
 
 =head1 SYNOPSIS
 
@@ -63,6 +67,16 @@ our $VERSION   = '0.01';
     # no error nor message_instance, as there is no enough data.
 
 See also the "eg" folder for sample of FIX-server.
+
+=head1 DESCRIPTION
+
+With this module you can easily create new FIX messages in human-readable way, i.e. use
+names like OrderQty => '499', instead of directly wring string like '39=499'; and vise
+versa, you can parse the gibberish FIX messages to access fields in human-readable way
+too.
+
+The module checks that mandatory fields are present, and that field values bypass
+the validation.
 
 =cut
 
