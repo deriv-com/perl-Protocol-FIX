@@ -168,6 +168,7 @@ sub extension {
 
     my $new_messsages_lookup = $self->_construct_messages($definition);
     _merge_lookups($self->{messages_lookup}->{by_name}, $new_messsages_lookup->{by_name});
+    _merge_lookups($self->{messages_lookup}->{by_number}, $new_messsages_lookup->{by_number});
 
     return $self;
 }
