@@ -20,7 +20,7 @@ sub _parse_tag_pair {
     my ($protocol, $pair, $check_value) = @_;
     return unless $pair;
 
-    if ($pair =~ /^(\d{1,3})($Protocol::FIX::TAG_SEPARATOR)(.*)$/) {
+    if ($pair =~ /^(\d{1,})($Protocol::FIX::TAG_SEPARATOR)(.*)$/) {
         my ($tag_id, $value) = ($1, $3);
 
         my $field = $protocol->{fields_lookup}->{by_number}->{$tag_id};
