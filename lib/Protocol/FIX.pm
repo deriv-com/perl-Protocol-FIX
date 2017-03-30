@@ -17,7 +17,7 @@ use Protocol::FIX::Parser;
 use Exporter qw/import/;
 
 our @EXPORT_OK = qw/humanize/;
-our $VERSION   = '0.02';
+our $VERSION   = '0.03';
 
 =head1 NAME
 
@@ -167,7 +167,7 @@ sub extension {
     _merge_lookups($self->{fields_lookup}->{by_number}, $new_fields_lookup->{by_number});
 
     my $new_messsages_lookup = $self->_construct_messages($definition);
-    _merge_lookups($self->{messages_lookup}->{by_name}, $new_messsages_lookup->{by_name});
+    _merge_lookups($self->{messages_lookup}->{by_name},   $new_messsages_lookup->{by_name});
     _merge_lookups($self->{messages_lookup}->{by_number}, $new_messsages_lookup->{by_number});
 
     return $self;
