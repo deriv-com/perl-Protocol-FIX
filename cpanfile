@@ -1,6 +1,6 @@
 requires 'mro';
 requires 'File::ShareDir';
-requires 'List::Util';
+requires 'List::Util', '1.33';
 requires 'Path::Tiny';
 requires 'XML::Fast';
 requires 'perl', '5.010';
