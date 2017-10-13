@@ -20,14 +20,14 @@ sub _parse_tag_pair {
     my ($protocol, $pair, $check_value) = @_;
     return unless $pair;
 
-    if ($pair =~ /^(\d{1,})($Protocol::FIX::TAG_SEPARATOR)(.*)$/) {
-        my ($tag_id, $value) = ($1, $3);
+    if ($pair =~ /^([0-9]+)$Protocol::FIX::TAG_SEPARATOR/op) {
+        my ($tag_id, $value) = ($1, ${^POSTMATCH});
 
         my $field = $protocol->{fields_lookup}->{by_number}->{$tag_id};
         return (undef, "Protocol error: unknown tag '$tag_id' in tag pair '" . Protocol::FIX::humanize($pair) . "'")
             unless $field;
 
-        return unless defined $3;
+        return unless defined $value;
 
         return ([$field, $value]) unless $check_value;
 
@@ -38,7 +38,7 @@ sub _parse_tag_pair {
         return ([$field, $value]);
 
     } else {
-        if ($pair =~ /[\D$Protocol::FIX::TAG_SEPARATOR]+/) {
+        if ($pair =~ /[\D$Protocol::FIX::TAG_SEPARATOR]+/o) {
             return (undef, "Protocol error: sequence '" . Protocol::FIX::humanize($pair) . "' does not match tag pair");
         }
         return;
@@ -124,7 +124,7 @@ sub parse {
             return (undef, "Protocol error: expected field 'CheckSum', but got '" . $field->{name} . "', in sequence '" . $checksum_pair . "'");
         }
 
-        my $is_number = ($value =~ /^\d{3}$/);
+        my $is_number = ($value =~ /^\d{3}$/o);
 
         if (!$is_number || ($is_number && ($value > 255))) {
             return (undef,
