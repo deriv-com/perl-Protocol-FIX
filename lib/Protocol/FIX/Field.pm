@@ -42,15 +42,15 @@ The following field types are known to the class. Validators are provided.
 =cut
 
 # anyting defined and not containing delimiter
-my $BOOLEAN_validator  = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
-my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
-my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
-my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0 };
+my $BOOLEAN_validator  = sub { defined($_[0]) && $_[0] =~ /^[YN]$/o };
+my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/o };
+my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/o };
+my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/o && $_[0] > 0 };
 my $DATA_validator     = sub { defined($_[0]) && length($_[0]) > 0 };
-my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
-my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/ };
-my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]{3}$/ };
-my $COUNTRY_validator  = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/ };
+my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/o };
+my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/o };
+my $CURRENCY_validator = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]{3}$/o };
+my $COUNTRY_validator  = sub { defined($_[0]) && $_[0] =~ /^[A-Z]{2}$/o };
 
 my $MONTHYEAR_validator = sub {
     my $d = shift;
@@ -59,7 +59,7 @@ my $MONTHYEAR_validator = sub {
     # YYYYMMWW
     my $ym_valid =
            defined($d)
-        && $d =~ /^(\d{4})(\d{2})([w\d]\d)?$/
+        && $d =~ /^(\d{4})(\d{2})([w\d]\d)?$/o
         && ($2 >= 1)
         && ($2 <= 12);
 
@@ -68,8 +68,8 @@ my $MONTHYEAR_validator = sub {
     my $r = $3;
     return 1 unless $r;
 
-    return ($r =~ /^w[1-6]$/)
-        || (($r =~ /^\d{2}$/) && ($r >= 1) && ($r <= 31));
+    return ($r =~ /^w[1-6]$/o)
+        || (($r =~ /^\d{2}$/o) && ($r >= 1) && ($r <= 31));
 };
 
 my $LOCALMKTDATE_validator = sub {
@@ -77,7 +77,7 @@ my $LOCALMKTDATE_validator = sub {
     # YYYYMMDD
     return
            defined($d)
-        && $d =~ /^(\d{4})(\d{2})(\d{2})$/
+        && $d =~ /^(\d{4})(\d{2})(\d{2})$/o
         && ($2 >= 1)
         && ($2 <= 12)
         && ($3 >= 1)
@@ -88,7 +88,7 @@ my $UTCTIMESTAMP_validator = sub {
     my $t = shift;
     # YYYYMMDD-HH:MM:SS
     # YYYYMMDD-HH:MM:SS.sss
-    if (defined($t) && $t =~ /^(\d{4})(\d{2})(\d{2})-(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
+    if (defined($t) && $t =~ /^(\d{4})(\d{2})(\d{2})-(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/o) {
         return
                ($2 >= 1)
             && ($2 <= 12)
@@ -110,7 +110,7 @@ my $UTCTIMEONLY_validator = sub {
     # HH:MM:SS
     # HH:MM:SS.sss
     my $t = shift;
-    if (defined($t) && $t =~ /^(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/) {
+    if (defined($t) && $t =~ /^(\d{2}):(\d{2}):(\d{2})(\.\d{3})?$/o) {
         return
                ($1 >= 0)
             && ($1 <= 23)
