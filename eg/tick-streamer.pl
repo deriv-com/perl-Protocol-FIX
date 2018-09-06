@@ -98,15 +98,15 @@ my $on_Logon = sub {
     my ($client, $message) = @_;
     if ($client->{status} eq 'unauthorized') {
         my $ok = 1;
-        $ok &&= ($message->value('SenderCompID') eq $target_comp_id) || do {
-            print "SenderCompID mismatch: ", $message->value('SenderCompID'), " vs $target_comp_id", "\n";
+        $ok &&= ($message->value('SenderCompID') eq $sender_comp_id) || do {
+            print "SenderCompID mismatch: ", $message->value('SenderCompID'), " vs $sender_comp_id", "\n";
             0;
         };
-        $ok &&= ($message->value('TargetCompID') eq $sender_comp_id) || do {
-            print "TargetCompID mismatch: ", $message->value('TargetCompID'), " vs $sender_comp_id", "\n";
+        $ok &&= ($message->value('TargetCompID') eq $target_comp_id) || do {
+            print "TargetCompID mismatch: ", $message->value('TargetCompID'), " vs $target_comp_id", "\n";
             0;
         };
-        $ok &&= ($message->value('Username') eq $login) || do {
+        $ok &&= ($message->value('Username') eq $login || !$message->value('Username')) || do {
             print "Username mismatch: ", $message->value('Username'), " vs $login", "\n";
             0;
         };
