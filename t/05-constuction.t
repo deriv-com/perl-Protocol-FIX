@@ -68,7 +68,6 @@ subtest "check component, consisted from single group(Stipulations)" => sub {
     ok !$composites->[3], "not required";
 };
 
-
 subtest "check group with sub-component(NoNestedPartyIDs) and it's container(NestedParties)" => sub {
     my $c = $proto->component_by_name('NestedParties');
     ok $c;
@@ -99,7 +98,7 @@ subtest "check group(NoCapacities) & component(CpctyConfGrp) with mandatory comp
     is $c->{composites}->[0]->{name}, 'NoCapacities';
     ok $c->{composites}->[1], 'mandatory';
 
-    my $g = $c->{composites}->[0];
+    my $g          = $c->{composites}->[0];
     my $composites = $g->{composites};
 
     is $composites->[0]->{name}, "OrderCapacity";
@@ -170,10 +169,10 @@ sub check_header_tail {
 
     ok !$m->{composite_by_name}->{BeginString}, "no managed field from header";
     ok $m->{composite_by_name}->{LastMsgSeqNumProcessed}, "field from header";
-    ok $m->{composite_by_name}->{Hop}, "component from header";
-    ok $m->{composite_by_name}->{Signature}, "field from trailer";
+    ok $m->{composite_by_name}->{Hop},                    "component from header";
+    ok $m->{composite_by_name}->{Signature},              "field from trailer";
     ok !$m->{composite_by_name}->{CheckSum}, "not managed field from trailer";
-};
+}
 
 subtest "message with single field(Heartbeat)" => sub {
     my $m = $proto->message_by_name('Heartbeat');
@@ -188,8 +187,8 @@ subtest "message with many fields & components (News)" => sub {
     ok $m;
     check_header_tail($m);
 
-    ok $m->{composite_by_name}->{OrigTime}, "own field is presented";
-    ok $m->{composite_by_name}->{Urgency}, "own field is presented";
+    ok $m->{composite_by_name}->{OrigTime},   "own field is presented";
+    ok $m->{composite_by_name}->{Urgency},    "own field is presented";
     ok $m->{composite_by_name}->{RoutingGrp}, "own component is presented";
     ok $m->{composite_by_name}->{InstrmtGrp}, "own component is presented";
     is $m->{category}, 'app';
@@ -206,6 +205,5 @@ subtest "message with group (Logon)" => sub {
     ok $g, "group NoMsgTypes is presented";
     $g->{composite_by_name}->{RefMsgType}, "needed field is available in group";
 };
-
 
 done_testing;

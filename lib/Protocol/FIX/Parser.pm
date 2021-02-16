@@ -136,7 +136,7 @@ sub parse {
         }
 
         my $header_body = substr($$buff_ref, 0, $consumed_length + $body_length);
-        my $sum = 0;
+        my $sum         = 0;
         $sum += ord $_ for split //, $header_body;
         $sum %= 256;
 

@@ -22,11 +22,15 @@ subtest "STRING" => sub {
     };
 
     subtest "string filed with enumerations" => sub {
-        my $f = Protocol::FIX::Field->new(5, 'AdvTransType', 'STRING', {
-            N => 'NEW',
-            C => 'CANCEL',
-            R => 'REPLACE',
-        });
+        my $f = Protocol::FIX::Field->new(
+            5,
+            'AdvTransType',
+            'STRING',
+            {
+                N => 'NEW',
+                C => 'CANCEL',
+                R => 'REPLACE',
+            });
         ok $f->has_mapping;
         is $f->serialize('NEW'), '5=N';
 
@@ -42,7 +46,6 @@ subtest "STRING" => sub {
         ok !$f->check('NEw');
         ok !$f->check('something else');
         ok !$f->check_raw('X');
-
 
     };
 };
@@ -61,11 +64,15 @@ subtest "INT" => sub {
     };
 
     subtest "with enumerations" => sub {
-        my $f = Protocol::FIX::Field->new(87, 'AllocStatus', 'INT', {
-            0 => 'ACCEPTED',
-            1 => 'BLOCK_LEVEL_REJECT',
-        });
-        is $f->serialize('ACCEPTED'), '87=0';
+        my $f = Protocol::FIX::Field->new(
+            87,
+            'AllocStatus',
+            'INT',
+            {
+                0 => 'ACCEPTED',
+                1 => 'BLOCK_LEVEL_REJECT',
+            });
+        is $f->serialize('ACCEPTED'),           '87=0';
         is $f->serialize('BLOCK_LEVEL_REJECT'), '87=1';
         ok $f->check('ACCEPTED');
 
