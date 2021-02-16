@@ -42,10 +42,10 @@ The following field types are known to the class. Validators are provided.
 =cut
 
 # anyting defined and not containing delimiter
-my $BOOLEAN_validator  = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
-my $STRING_validator   = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
-my $INT_validator      = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
-my $LENGTH_validator   = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0 };
+my $BOOLEAN_validator = sub { defined($_[0]) && $_[0] =~ /^[YN]$/ };
+my $STRING_validator  = sub { defined($_[0]) && $_[0] !~ /$Protocol::FIX::TAG_SEPARATOR/ };
+my $INT_validator     = sub { defined($_[0]) && $_[0] =~ /^-?\d+$/ };
+my $LENGTH_validator  = sub { defined($_[0]) && $_[0] =~ /^\d+$/ && $_[0] > 0 };
 my $DATA_validator     = sub { defined($_[0]) && length($_[0]) > 0 };
 my $FLOAT_validator    = sub { defined($_[0]) && $_[0] =~ /^-?\d+(\.?\d*)$/ };
 my $CHAR_validator     = sub { defined($_[0]) && $_[0] =~ /^[^$Protocol::FIX::TAG_SEPARATOR]$/ };
@@ -99,7 +99,7 @@ my $UTCTIMESTAMP_validator = sub {
             && ($5 >= 0)
             && ($5 <= 59)
             && ($6 >= 0)
-            && ($5 <= 60)
+            && ($5 <= 60);
 
     } else {
         return;
