@@ -158,7 +158,7 @@ sub extension {
 
     my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
     my $extension_id = join('.', $type, $major, $minor);
-    my $protocol_id = $self->{id};
+    my $protocol_id  = $self->{id};
     die("Extension ID ($extension_id) does not match Protocol ID ($protocol_id)")
         unless $extension_id eq $protocol_id;
 
@@ -251,7 +251,7 @@ sub _get_composites {
     my ($values, $lookup) = @_;
     return () unless $values;
 
-    my $array = ref($values) ne 'ARRAY' ? [$values] : $values;
+    my $array      = ref($values) ne 'ARRAY' ? [$values] : $values;
     my @composites = map {
         my $ref       = $_;
         my $name      = $ref->{-name};
@@ -399,7 +399,7 @@ sub _construct_from_definition {
     my ($type, $major, $minor) = @{$definition->{fix}}{qw/-type -major -minor/};
     my $protocol_id = join('.', $type, $major, $minor);
 
-    my $fields_lookup = $self->_construct_fields($definition);
+    my $fields_lookup     = $self->_construct_fields($definition);
     my $components_lookup = $self->_construct_components($definition, $fields_lookup);
 
     my $header_descr  = $definition->{fix}->{header};

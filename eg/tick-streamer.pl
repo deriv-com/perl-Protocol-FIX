@@ -11,19 +11,23 @@ use Protocol::FIX qw/humanize/;
 use POSIX qw(strftime);
 
 GetOptions(
-    'p|listening_port=i'      => \my $port,
-    's|symbol_list=s'         => \my $symbol_list,
-    'S|SenderCompID=s'        => \my $sender_comp_id,
-    'T|TargetCompID=s'        => \my $target_comp_id,
-    'L|Login=s'               => \my $login,
-    'P|Password=s'            => \my $password,
-    'h|help'                  => \my $help,
+    'p|listening_port=i' => \my $port,
+    's|symbol_list=s'    => \my $symbol_list,
+    'S|SenderCompID=s'   => \my $sender_comp_id,
+    'T|TargetCompID=s'   => \my $target_comp_id,
+    'L|Login=s'          => \my $login,
+    'P|Password=s'       => \my $password,
+    'h|help'             => \my $help,
 );
 
-my $show_help = $help || !$port || !$symbol_list
-    || !$sender_comp_id || !$target_comp_id
-    || !$login || !$password
-    ;
+my $show_help =
+       $help
+    || !$port
+    || !$symbol_list
+    || !$sender_comp_id
+    || !$target_comp_id
+    || !$login
+    || !$password;
 die <<"EOF" if ($show_help);
 usage: $0 OPTIONS
 
@@ -39,7 +43,7 @@ EOF
 
 my @symbols = sort split /,/, $symbol_list;
 my %price_for = map {
-    my $s = $_;
+    my $s     = $_;
     my $price = sprintf('%0.3f', 1000 * rand);
     print "initial price for $s = $price\n";
     $s => $price;
@@ -47,46 +51,51 @@ my %price_for = map {
 
 my $send_quotes;
 
-
 my $send_message = sub {
     my ($client, $message) = @_;
     print("=> ", $client->{id}, " : ", ($message =~ s/\x{01}/|/gr), "\n");
     $client->{stream}->write($message);
 };
 
-Mojo::IOLoop->recurring(1 => sub {
-    print("refreshing quotes\n");
-    for my $symbol (@symbols) {
-        my $price = $price_for{$symbol};
-        my $delta = $price * 0.0001;
-        $price += (rand() * $delta) - $delta * 0.5;
-        $price = sprintf('%0.3f', $price);
-        print "$symbol => $price\n";
-        $price_for{$symbol} = $price;
-    }
-    $send_quotes->();
-});
-
+Mojo::IOLoop->recurring(
+    1 => sub {
+        print("refreshing quotes\n");
+        for my $symbol (@symbols) {
+            my $price = $price_for{$symbol};
+            my $delta = $price * 0.0001;
+            $price += (rand() * $delta) - $delta * 0.5;
+            $price = sprintf('%0.3f', $price);
+            print "$symbol => $price\n";
+            $price_for{$symbol} = $price;
+        }
+        $send_quotes->();
+    });
 
 my %session_for;
 my $fix_protocol = Protocol::FIX->new('FIX44');
 
 $send_quotes = sub {
-    for my $client (grep {$_->{status} eq 'authorized'} values %session_for ) {
+    for my $client (grep { $_->{status} eq 'authorized' } values %session_for) {
         for my $symbol (@symbols) {
-            my $price = $price_for{$symbol};
+            my $price     = $price_for{$symbol};
             my $timestamp = strftime("%Y%m%d-%H:%M:%S.000", gmtime);
-            my $message = $fix_protocol->message_by_name('MarketDataSnapshotFullRefresh')
-                ->serialize([
+            my $message   = $fix_protocol->message_by_name('MarketDataSnapshotFullRefresh')->serialize([
                     SenderCompID => $sender_comp_id,
                     TargetCompID => $target_comp_id,
                     MsgSeqNum    => $client->{msg_seq}++,
                     SendingTime  => $timestamp,
                     Instrument   => [Symbol => $symbol],
-                    MDFullGrp    => [ NoMDEntries => [
-                        [MDEntryType => 'BID',   MDEntryPx => $price],
-                        [MDEntryType => 'OFFER', MDEntryPx => $price],
-                    ]],
+                    MDFullGrp    => [
+                        NoMDEntries => [[
+                                MDEntryType => 'BID',
+                                MDEntryPx   => $price
+                            ],
+                            [
+                                MDEntryType => 'OFFER',
+                                MDEntryPx   => $price
+                            ],
+                        ]
+                    ],
                 ]);
             $send_message->($client, $message);
         }
@@ -119,15 +128,14 @@ my $on_Logon = sub {
             $client->{status} = 'authorized';
 
             my $timestamp = strftime("%Y%m%d-%H:%M:%S.000", gmtime);
-            my $message = $fix_protocol->message_by_name('Logon')
-                ->serialize([
-                    SenderCompID  => $sender_comp_id,
-                    TargetCompID  => $target_comp_id,
-                    MsgSeqNum     => $client->{msg_seq}++,
-                    SendingTime   => $timestamp,
-                    EncryptMethod => 'NONE',
-                    HeartBtInt    => 60,
-                ]);
+            my $message   = $fix_protocol->message_by_name('Logon')->serialize([
+                SenderCompID  => $sender_comp_id,
+                TargetCompID  => $target_comp_id,
+                MsgSeqNum     => $client->{msg_seq}++,
+                SendingTime   => $timestamp,
+                EncryptMethod => 'NONE',
+                HeartBtInt    => 60,
+            ]);
 
             $send_message->($client, $message);
         } else {
@@ -145,48 +153,58 @@ my %dispatcher = (
 my $on_accept = sub {
     my $client = shift;
     my $stream = $client->{stream};
-    $stream->on(read => sub {
-        my ($stream, $bytes) = @_;
-        $client->{buff} .= $bytes;
-        print("Received ", length($bytes), " bytes from client ", $client->{id}, "\n");
-        print(humanize($bytes),"\n");
+    $stream->on(
+        read => sub {
+            my ($stream, $bytes) = @_;
+            $client->{buff} .= $bytes;
+            print("Received ", length($bytes), " bytes from client ", $client->{id}, "\n");
+            print(humanize($bytes), "\n");
 
-        my ($message, $err) = $fix_protocol->parse_message(\$client->{buff});
-        if ($err) {
-            print ("Got protocol error from ", $client->{id}, ":", $err, "\n");
-        }elsif ($message) {
-            my $name = $message->name;
-            print("Message '$name'\n");
-            my $handler = $dispatcher{$name} // die("No handler for message '$name'");
-            $handler->($client, $message);
-        } else {
-            print("Not enough data to parse message\n");
-        }
-    });
-    $stream->on(close => sub {
-        my $stream = shift;
-        print("Stream fro cleint ", $client->{id}, " has been closed", "\n");
-        delete $session_for{$client->{id}};
-    });
-    $stream->on(error => sub {
-        my ($stream, $err) = @_;
-        print("Client ", $client->{id}, " errored with", $err, "\n");
-    });
+            my ($message, $err) = $fix_protocol->parse_message(\$client->{buff});
+            if ($err) {
+                print("Got protocol error from ", $client->{id}, ":", $err, "\n");
+            } elsif ($message) {
+                my $name = $message->name;
+                print("Message '$name'\n");
+                my $handler = $dispatcher{$name} // die("No handler for message '$name'");
+                $handler->($client, $message);
+            } else {
+                print("Not enough data to parse message\n");
+            }
+        });
+    $stream->on(
+        close => sub {
+            my $stream = shift;
+            print("Stream fro cleint ", $client->{id}, " has been closed", "\n");
+            delete $session_for{$client->{id}};
+        });
+    $stream->on(
+        error => sub {
+            my ($stream, $err) = @_;
+            print("Client ", $client->{id}, " errored with", $err, "\n");
+        });
     $stream->start;
 
 };
 
 my $server = Mojo::IOLoop::Server->new;
-$server->on(accept => sub {
-    my ($server, $handle) = @_;
-    #print ref($handle);
-    my $client_id = $handle->peerhost . ":" . $handle->peerport;
-    print "accepted client: $client_id\n";
-    my $stream = Mojo::IOLoop::Stream->new($handle);
-    my $client = { id => $client_id, stream => $stream, status => 'unauthorized', buff => '', msg_seq => 1, };
-    $session_for{$client_id} = $client;
-    $on_accept->($client);
-});
+$server->on(
+    accept => sub {
+        my ($server, $handle) = @_;
+        #print ref($handle);
+        my $client_id = $handle->peerhost . ":" . $handle->peerport;
+        print "accepted client: $client_id\n";
+        my $stream = Mojo::IOLoop::Stream->new($handle);
+        my $client = {
+            id      => $client_id,
+            stream  => $stream,
+            status  => 'unauthorized',
+            buff    => '',
+            msg_seq => 1,
+        };
+        $session_for{$client_id} = $client;
+        $on_accept->($client);
+    });
 $server->listen(port => $port);
 
 $server->start;
