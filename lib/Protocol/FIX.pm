@@ -129,7 +129,7 @@ sub new {
 Modifies the protocol, by loading XML extension.
 
 The extension might contain additional B<messages> or B<fields>.  The
-extenation XML should conform the format as the protocol definition itself,
+extension XML should conform the format as the protocol definition itself,
 i.e.:
 
     <fix type='FIX' major='4' minor='4' servicepack='0'>
