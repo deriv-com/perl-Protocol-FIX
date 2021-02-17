@@ -139,20 +139,25 @@ $send_quotes = sub {
 my $on_Logon = sub {
     my ($client, $message) = @_;
     if ($client->{status} eq 'unauthorized') {
-        my $ok = 1;
+        my $ok         = 1;
+        my $error_code = '';
         $ok &&= ($message->value('SenderCompID') eq $target_comp_id) || do {
+            $error_code = 'SenderCompID_Mismatch';
             $log->debugf("SenderCompID mismatch: %s vs %s", $message->value('SenderCompID'), $target_comp_id);
             0;
         };
         $ok &&= ($message->value('TargetCompID') eq $sender_comp_id) || do {
+            $error_code = 'TargetCompID_Mismatch';
             $log->debugf("TargetCompID mismatch: %s vs %s", $message->value('TargetCompID'), $sender_comp_id);
             0;
         };
         $ok &&= ($message->value('Username') eq $username) || do {
+            $error_code = 'Credentials_Mismatch';
             $log->debugf("Username mismatch: %s vs %s", $message->value('Username'), $username);
             0;
         };
         $ok &&= ($message->value('Password') eq hmac_sha256_hex($username, $password)) || do {
+            $error_code = 'Credentials_Mismatch';
             $log->debugf("Password mismatch: %s vs %s", $message->value('Password'), $password);
             0;
         };
@@ -180,7 +185,7 @@ my $on_Logon = sub {
                 TargetCompID => $target_comp_id,
                 SendingTime  => $timestamp,
                 MsgSeqNum    => $client->{msg_seq}++,
-                Text         => 'Invalid credentials'
+                Text         => "Invalid login. Error: $error_code."
             ]);
 
             $send_message->($client, $message);
