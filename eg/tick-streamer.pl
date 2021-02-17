@@ -16,7 +16,7 @@ GetOptions(
     's|symbol_list=s'    => \my $symbol_list,
     'S|SenderCompID=s'   => \my $sender_comp_id,
     'T|TargetCompID=s'   => \my $target_comp_id,
-    'L|Login=s'          => \my $login,
+    'U|Username=s'       => \my $username,
     'P|Password=s'       => \my $password,
     'h|help'             => \my $help,
 );
@@ -27,7 +27,7 @@ my $show_help =
     || !$symbol_list
     || !$sender_comp_id
     || !$target_comp_id
-    || !$login
+    || !$username
     || !$password;
 die <<"EOF" if ($show_help);
 usage: $0 OPTIONS
@@ -37,7 +37,7 @@ These options are available:
   -s, --symbol_list             Comma-separated symbols list (e.g. EURAUD, EURCAD)
   -S, --SenderCompID            SenderCompID (e.g. FixServer)
   -T, --TargetCompID            TargetCompID (e.g. Client1)
-  -L, --Login                   Login
+  -U, --Username                Username
   -P, --Password                Password
   -h, --help                    Show this message.
 EOF
@@ -116,11 +116,11 @@ my $on_Logon = sub {
             print "TargetCompID mismatch: ", $message->value('TargetCompID'), " vs $sender_comp_id", "\n";
             0;
         };
-        $ok &&= ($message->value('Username') eq $login) || do {
-            print "Username mismatch: ", $message->value('Username'), " vs $login", "\n";
+        $ok &&= ($message->value('Username') eq $username) || do {
+            print "Username mismatch: ", $message->value('Username'), " vs $username", "\n";
             0;
         };
-        $ok &&= ($message->value('Password') eq hmac_sha256_hex($login, $password)) || do {
+        $ok &&= ($message->value('Password') eq hmac_sha256_hex($username, $password)) || do {
             print "Password mismatch: ", $message->value('Password'), " vs $password", "\n";
             0;
         };
