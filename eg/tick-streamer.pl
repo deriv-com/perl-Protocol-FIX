@@ -140,6 +140,17 @@ my $on_Logon = sub {
             $send_message->($client, $message);
         } else {
             print("credentials mismatch ", $client->{id}, "\n");
+
+            my $timestamp = strftime("%Y%m%d-%H:%M:%S.000", gmtime);
+            my $message   = $fix_protocol->message_by_name('Logout')->serialize([
+                SenderCompID => $sender_comp_id,
+                TargetCompID => $target_comp_id,
+                SendingTime  => $timestamp,
+                MsgSeqNum    => $client->{msg_seq}++,
+                Text         => 'Invalid credentials'
+            ]);
+
+            $send_message->($client, $message);
         }
     } else {
         print("client is already authorized, protocol error\n");
@@ -175,7 +186,7 @@ my $on_accept = sub {
     $stream->on(
         close => sub {
             my $stream = shift;
-            print("Stream fro cleint ", $client->{id}, " has been closed", "\n");
+            print("Stream for client ", $client->{id}, " has been closed", "\n");
             delete $session_for{$client->{id}};
         });
     $stream->on(
@@ -184,7 +195,6 @@ my $on_accept = sub {
             print("Client ", $client->{id}, " errored with", $err, "\n");
         });
     $stream->start;
-
 };
 
 my $server = Mojo::IOLoop::Server->new;
