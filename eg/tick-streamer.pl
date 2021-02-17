@@ -1,16 +1,46 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+tick-streamer - Mojolicious-based FIX-server
+
+=head1 SYNOPSIS
+
+perl tick-streamer.pl [options]
+
+ Options
+  -p, --listening_port          Port, on which server will accept incoming connections
+  -s, --symbol_list             Comma-separated symbols list (e.g. EURCAD, EURUSD)
+  -S, --SenderCompID            SenderCompID (e.g. FixServer)
+  -T, --TargetCompID            TargetCompID (e.g. Client1)
+  -U, --Username                Username
+  -P, --Password                Password (hmac sha 256 of username and password)
+  -l, --log                     Log level
+  -h, --help                    Show this message.
+
+=head1 DESCRIPTION
+
+Mojolicious-based FIX-server which streams quotes with randomly generated prices
+
+=cut
+
 use strict;
 use warnings;
-
-# Mojolicious-based FIX-server which streams quotes with randomly generated prices
-
-use Getopt::Long qw(GetOptions :config no_auto_abbrev no_ignore_case);
 
 use Mojo::IOLoop::Server;
 use Mojo::IOLoop;
 use Protocol::FIX qw/humanize/;
 use POSIX qw(strftime);
 use Digest::SHA qw(hmac_sha256_hex);
+use Pod::Usage;
+use Getopt::Long qw(GetOptions :config no_auto_abbrev no_ignore_case);
 
+use Log::Any qw($log);
+
+binmode STDOUT, ':encoding(UTF-8)';
+binmode STDERR, ':encoding(UTF-8)';
+
+require Log::Any::Adapter;
 GetOptions(
     'p|listening_port=i' => \my $port,
     's|symbol_list=s'    => \my $symbol_list,
@@ -18,8 +48,15 @@ GetOptions(
     'T|TargetCompID=s'   => \my $target_comp_id,
     'U|Username=s'       => \my $username,
     'P|Password=s'       => \my $password,
+    'l|log=s'            => \my $log_level,
     'h|help'             => \my $help,
-);
+    )
+    or pod2usage({
+        -verbose  => 99,
+        -sections => "NAME|SYNOPSIS|DESCRIPTION|OPTIONS",
+    });
+
+Log::Any::Adapter->set(qw(Stdout), log_level => $log_level // 'info');
 
 my $show_help =
        $help
@@ -29,18 +66,13 @@ my $show_help =
     || !$target_comp_id
     || !$username
     || !$password;
-die <<"EOF" if ($show_help);
-usage: $0 OPTIONS
 
-These options are available:
-  -p, --listening_port          Port, on which $0 will accept incoming connections
-  -s, --symbol_list             Comma-separated symbols list (e.g. EURAUD, EURCAD)
-  -S, --SenderCompID            SenderCompID (e.g. FixServer)
-  -T, --TargetCompID            TargetCompID (e.g. Client1)
-  -U, --Username                Username
-  -P, --Password                Password
-  -h, --help                    Show this message.
-EOF
+pod2usage({
+        -verbose  => 99,
+        -sections => "NAME|SYNOPSIS|DESCRIPTION|OPTIONS",
+    }) if $show_help;
+
+Log::Any::Adapter->set(qw(Stdout), log_level => $log_level // 'info');
 
 my @symbols = sort split /,/, $symbol_list;
 my %price_for = map {
