@@ -9,6 +9,7 @@ use Mojo::IOLoop::Server;
 use Mojo::IOLoop;
 use Protocol::FIX qw/humanize/;
 use POSIX qw(strftime);
+use Digest::SHA qw(hmac_sha256_hex);
 
 GetOptions(
     'p|listening_port=i' => \my $port,
@@ -119,7 +120,7 @@ my $on_Logon = sub {
             print "Username mismatch: ", $message->value('Username'), " vs $login", "\n";
             0;
         };
-        $ok &&= ($message->value('Password') eq $password) || do {
+        $ok &&= ($message->value('Password') eq hmac_sha256_hex($login, $password)) || do {
             print "Password mismatch: ", $message->value('Password'), " vs $password", "\n";
             0;
         };
