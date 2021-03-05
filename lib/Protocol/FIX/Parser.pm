@@ -219,7 +219,7 @@ sub _construct_tag_accessor_group {
     my ($sub_composite, undef) = @$composite_desc;
 
     my @tag_accessors;
-    for my $idx (1 .. $value) {
+    for (my $idx = 1; $idx <= $value; ) {
         my ($ta) = _construct_tag_accessor($protocol, $sub_composite, $tag_pairs, 0);
         return (undef,
                   "Protocol error: cannot construct item #${idx} for "
@@ -229,6 +229,7 @@ sub _construct_tag_accessor_group {
                 . $sub_composite->{name} . "')")
             unless $ta;
         push @tag_accessors, $ta;
+        $idx += $ta->count;
     }
     return ([$sub_composite => \@tag_accessors]);
 }
