@@ -50,6 +50,14 @@ sub value {
     return $self->{$name};
 }
 
+=head3 count
+
+    count($self)
+
+Returns the count for the repetitive tag pairs
+
+=cut
+
 sub count {
     my $self = shift;
     return $self->{_count};
