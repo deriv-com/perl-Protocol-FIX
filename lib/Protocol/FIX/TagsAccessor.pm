@@ -25,15 +25,12 @@ by end-users.
 sub new {
     my ($class, $tag_pairs) = @_;
     my %by_name;
-    my $count = 0;
     for (my $idx = 0; $idx < @$tag_pairs; $idx += 2) {
         my $composite = $tag_pairs->[$idx];
         # value is either value (i.e. string) or another TagAccessor
         my $value = $tag_pairs->[$idx + 1];
         $by_name{$composite->{name}} = $value;
-        ++$count;
     }
-    $by_name{_count} = $count;
     return bless \%by_name, $class;
 }
 
@@ -50,17 +47,5 @@ sub value {
     return $self->{$name};
 }
 
-=head3 count
-
-    count($self)
-
-Returns the count for the repetitive tag pairs
-
-=cut
-
-sub count {
-    my $self = shift;
-    return $self->{_count};
-}
 
 1;
