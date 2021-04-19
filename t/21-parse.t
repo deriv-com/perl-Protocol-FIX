@@ -316,6 +316,11 @@ subtest "MarketDataRequest with 2 instruments" => sub {
     );
     my ($mi, $err) = $proto->parse_message(\$buff);
     ok $mi;
+
+    my $syms = $mi->value('InstrmtMDReqGrp')->value('NoRelatedSym');
+    is $syms->[0]->value('Instrument')->value('Symbol'), '1HZ100V';
+    is $syms->[1]->value('Instrument')->value('Symbol'), 'R_100';
+
     is $err, undef;
 };
 
