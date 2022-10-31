@@ -16,7 +16,7 @@
     - Bugfix: relax tag length check
     - Bugfix: parse messages, defined in protocol extension
 
-0.02
+0.02  2017-03-21 14:24:26+00:00 UTC
     - Reddit's feedback: add DESCRIPTION and NAME sections into POD
 
 0.01      2017-03-15 11:10:40+00:00 UTC
