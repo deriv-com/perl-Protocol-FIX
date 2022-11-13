@@ -1,8 +1,6 @@
-# NAME Protocol::FIX
+# NAME
 
-![Build status](https://api.travis-ci.org/binary-com/perl-Protocol-FIX.png "Build status")
-[![codecov](https://codecov.io/gh/binary-com/perl-Protocol-FIX/branch/master/graph/badge.svg)](https://codecov.io/gh/binary-com/perl-Protocol-FIX)
-
+Protocol::FIX - Financial Information eXchange (FIX) messages parser/serializer
 
 # SYNOPSIS
 
@@ -49,104 +47,30 @@
 
 See also the "eg" folder for sample of FIX-server.
 
+# DESCRIPTION
+
+With this module you can easily create new FIX messages in human-readable way, i.e. use
+names like OrderQty => '499', instead of directly wring string like '39=499'; and vise
+versa, you can parse the gibberish FIX messages to access fields in human-readable way
+too.
+
+The module checks that mandatory fields are present, and that field values bypass
+the validation.
+
 # METHODS
 
-### new($class, $version)
+### new
+
+    new($class, $version)
 
 Creates new protocol instance for the specified FIX protocol version. Currently
 shipped version is 'FIX44'.
 
 The xml with protocol definition was taken at [http://quickfixengine.org/](http://quickfixengine.org/).
 
-### humanize ($buffer)
+### extension
 
-Returns human-readable string for the buffer. I.e. is just substitutes
-[SOH](https://en.wikipedia.org/wiki/C0_and_C1_control_codes) to " | ".
-
-This might be usable during development of own FIX-client/server.
-
-### is\_composite($object)
-
-Checks whether the supplied `$object` conforms "composte" concept.
-I.e. is it is [Field](https://metacpan.org/pod/Field), [LGroup](https://metacpan.org/pod/LGroup), [Component](https://metacpan.org/pod/Component) or [Mesassage](https://metacpan.org/pod/Mesassage).
-
-Not for end-user usage.
-
-### field\_by\_name($self, $field\_name)
-
-Returns Field object by it's name or dies with error.
-
-Not for end-user usage.
-
-### field\_by\_number($self, $field\_number)
-
-Returns Field object by it's number or dies with error.
-
-Not for end-user usage.
-
-### component\_by\_name($self, $name)
-
-Returns Component object by it's name or dies with error.
-
-Not for end-user usage.
-
-### message\_by\_name($self, $name)
-
-Returns Message object by it's name or dies with error.
-
-### header($self)
-
-Returns Message's header
-
-Not for end-user usage.
-
-### trailer($self)
-
-Returns Message's trailer
-
-Not for end-user usage.
-
-### id($self)
-
-Returns Protocol's ID string, as it appears in FIX message (BeginString field).
-
-Not for end-user usage.
-
-### managed\_composites()
-
-Returns list of fields, managed by protocol. Currently the list consists of
-fields: BeginString, MsgType, and CheckSum
-
-Not for end-user usage.
-
-### serialize\_message($self, $message\_name, $payload)
-
-Returns serialized string for the supplied `$message_name` and `$payload`.
-Dies in case of end-user (developer) error, e.g. if mandatory field is
-absent.
-
-### parse\_message($self, $buff\_ref)
-
-    my ($message_instance, $error) = $protocol->parse($buff_ref);
-
-Tries to parse FIX message in the buffer refernce.
-
-In the case of success it returns `MessageInstance` and `$error` is undef.
-The string in `$buff_ref` will be consumed.
-
-In the case of **protocol error**, the `$message_instance` will be undef,
-and `$error` will contain the error description. The string in `$buff_ref`
-will be kept untouched.
-
-In the case, when there is no enough data in `$buff_ref` both `$error`
-and `$message_instance` will be undef. The string in `$buff_ref`
-will be kept untouched, i.e. waiting futher accumulation of bytes from
-network.
-
-In other cases it dies; that indicates either end-user (developer) error
-or bug in the module.
-
-### extension($self, $extension\_path)
+    extension($self, $extension_path)
 
 Modifies the protocol, by loading XML extension.
 
@@ -169,3 +93,101 @@ i.e.:
                     <field number='33000' name='AwesomeField' type='STRING' />
             </fields>
     </fix>
+
+### serialize\_message
+
+    serialize_message($self, $message_name, $payload)
+
+Returns serialized string for the supplied `$message_name` and `$payload`.
+Dies in case of end-user (developer) error, e.g. if mandatory field is
+absent.
+
+### parse\_message
+
+    parse_message($self, $buff_ref)
+
+    my ($message_instance, $error) = $protocol->parse($buff_ref);
+
+Tries to parse FIX message in the buffer refernce.
+
+In the case of success it returns `MessageInstance` and `$error` is undef.
+The string in `$buff_ref` will be consumed.
+
+In the case of **protocol error**, the `$message_instance` will be undef,
+and `$error` will contain the error description. The string in `$buff_ref`
+will be kept untouched.
+
+In the case, when there is no enough data in `$buff_ref` both `$error`
+and `$message_instance` will be undef. The string in `$buff_ref`
+will be kept untouched, i.e. waiting futher accumulation of bytes from
+network.
+
+In other cases it dies; that indicates either end-user (developer) error
+or bug in the module.
+
+# METHODS (for protocol developers)
+
+### humanize
+
+    humanize ($buffer)
+
+Returns human-readable string for the buffer. I.e. is just substitutes
+[SOH](https://en.wikipedia.org/wiki/C0_and_C1_control_codes) to " | ".
+
+This might be usable during development of own FIX-client/server.
+
+### is\_composite
+
+    is_composite($object)
+
+Checks whether the supplied `$object` conforms "composte" concept.
+I.e. is it is [Field](https://metacpan.org/pod/Field), [LGroup](https://metacpan.org/pod/LGroup), [Component](https://metacpan.org/pod/Component) or [Mesassage](https://metacpan.org/pod/Mesassage).
+
+### field\_by\_name
+
+    field_by_name($self, $field_name)
+
+Returns Field object by it's name or dies with error.
+
+### field\_by\_number
+
+    field_by_number($self, $field_number)
+
+Returns Field object by it's number or dies with error.
+
+### component\_by\_name
+
+    component_by_name($self, $name)
+
+Returns Component object by it's name or dies with error.
+
+### message\_by\_name
+
+    message_by_name($self, $name)
+
+Returns Message object by it's name or dies with error.
+
+### header
+
+    header($self)
+
+Returns Message's header
+
+### trailer
+
+    trailer($self)
+
+Returns Message's trailer
+
+### id
+
+    id($self)
+
+Returns Protocol's ID string, as it appears in FIX message (BeginString field).
+
+### managed\_composites
+
+    managed_composites()
+
+Returns list of fields, managed by protocol. Currently the list consists of
+fields: BeginString, MsgType, and CheckSum
