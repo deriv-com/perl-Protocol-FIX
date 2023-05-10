@@ -1,5 +1,13 @@
 {{$NEXT}}
 
+0.08      2023-05-10 10:43:06+00:00 UTC
+
+0.08      2023-05-01 08:53:22+00:00 UTC
+    - Update: Add "Instrument" component to MarketDataIncrementalRefresh message schema
+
+0.07      2022-11-13 06:51:43+00:00 UTC
+    - Bugfix: Repetitive group not returning correct number of symbols
+    
 0.06      2021-04-19 15:37:10+00:00 UTC
     - Bugfix: Repetitive group not returning correct number of symbols
 
