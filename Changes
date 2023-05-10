@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.08      2023-05-10 10:43:06+00:00 UTC
+
 0.08      2023-05-01 08:53:22+00:00 UTC
     - Update: Add "Instrument" component to MarketDataIncrementalRefresh message schema
 
