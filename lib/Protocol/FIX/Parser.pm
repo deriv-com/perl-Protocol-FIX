@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use List::Util qw/first/;
-use Protocol::FIX qw/humanize/;
+use Protocol::FIX;
 use Protocol::FIX::TagsAccessor;
 use Protocol::FIX::MessageInstance;
 
